@@ -212,6 +212,41 @@ function pintarTasasNav(){
    ========================================================== */
 let rangoActivo = 'todo';
 
+/* --- barra plegable de búsqueda --- */
+const CLAVE_UI = 'registroTorii.ui.filtros';
+let filtrosAbiertos = false;
+try { filtrosAbiertos = localStorage.getItem(CLAVE_UI) === '1'; } catch(e){}
+
+function pintarPanelFiltros(){
+  $('#filtrosCuerpo').hidden = !filtrosAbiertos;
+  $('#panelFiltros').classList.toggle('abierto', filtrosAbiertos);
+  $('#btnFiltros').setAttribute('aria-expanded', String(filtrosAbiertos));
+}
+
+$('#btnFiltros').addEventListener('click', () => {
+  filtrosAbiertos = !filtrosAbiertos;
+  try { localStorage.setItem(CLAVE_UI, filtrosAbiertos ? '1' : '0'); } catch(e){}
+  pintarPanelFiltros();
+});
+
+function contarFiltros(){
+  let n = rangoActivo === 'todo' ? 0 : 1;
+  ['#fNombre','#fFigura','#fPrecioMin','#fPrecioMax','#fEstado','#fMetodo'].forEach(s => {
+    if($(s).value.trim() !== '') n++;
+  });
+  estado.config.campos.forEach(c => {
+    const el = $(`#fx-${c.id}`);
+    if(el && el.value.trim() !== '') n++;
+  });
+  const badge = $('#contadorFiltros');
+  badge.textContent = n;
+  badge.hidden = n === 0;
+  $('#btnLimpiar').hidden = n === 0;
+  $('#ftTexto').textContent = n === 0
+    ? 'Búsqueda y filtros'
+    : `Filtrando · ${n} ${n === 1 ? 'filtro activo' : 'filtros activos'}`;
+}
+
 $$('#chipsFecha .chip').forEach(c => c.addEventListener('click', () => {
   rangoActivo = c.dataset.rango;
   $$('#chipsFecha .chip').forEach(x => x.classList.toggle('is-active', x === c));
@@ -305,6 +340,7 @@ function pintarLista(){
         : 'Aún no has guardado registros. Empieza en “Nuevo registro”.'}</div>`;
 
   $$('#lista .reg').forEach(el => el.addEventListener('click', () => abrirDetalle(el.dataset.id)));
+  contarFiltros();
 }
 
 /* ==========================================================
@@ -769,6 +805,7 @@ $('#btnBorrarTodo').addEventListener('click', () => {
    11. Arranque
    ========================================================== */
 function iniciarUI(){
+  pintarPanelFiltros();
   pintarMetodos();
   pintarCamposForm();
   pintarFiltrosExtra();

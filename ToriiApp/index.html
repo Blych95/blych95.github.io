@@ -130,10 +130,20 @@
           <span class="eyebrow">検索</span>
           <h1>Registros</h1>
         </div>
-        <button class="btn btn-ghost" id="btnLimpiar">Limpiar filtros</button>
       </header>
 
-      <div class="card filtros">
+      <div class="card filtros" id="panelFiltros">
+        <div class="filtros-barra">
+          <button class="filtros-toggle" id="btnFiltros" aria-expanded="false" aria-controls="filtrosCuerpo">
+            <svg class="ico-lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6"/><line x1="13.4" y1="13.4" x2="18" y2="18"/></svg>
+            <span class="ft-txt" id="ftTexto">Búsqueda y filtros</span>
+            <span class="filtros-activos" id="contadorFiltros" hidden>0</span>
+            <svg class="chevron" viewBox="0 0 20 20" aria-hidden="true"><polyline points="5,8 10,13 15,8"/></svg>
+          </button>
+          <button class="btn btn-ghost btn-mini" id="btnLimpiar" hidden>Limpiar</button>
+        </div>
+
+        <div class="filtros-cuerpo" id="filtrosCuerpo" hidden>
         <div class="chips" id="chipsFecha">
           <button class="chip is-active" data-rango="todo">Todo</button>
           <button class="chip" data-rango="hoy">Hoy</button>
@@ -164,18 +174,20 @@
 
         <div class="filtros-grid" id="filtrosExtra"></div>
 
-        <div class="filtros-pie">
-          <label class="orden">Ordenar por
-            <select id="fOrden">
-              <option value="fecha-desc">Fecha (más reciente)</option>
-              <option value="fecha-asc">Fecha (más antigua)</option>
-              <option value="precio-desc">Precio (mayor)</option>
-              <option value="precio-asc">Precio (menor)</option>
-              <option value="nombre-asc">Cliente (A-Z)</option>
-            </select>
-          </label>
-          <p class="resumen-busqueda" id="resumenBusqueda"></p>
         </div>
+      </div>
+
+      <div class="lista-barra">
+        <p class="resumen-busqueda" id="resumenBusqueda"></p>
+        <label class="orden">Ordenar por
+          <select id="fOrden">
+            <option value="fecha-desc">Fecha (más reciente)</option>
+            <option value="fecha-asc">Fecha (más antigua)</option>
+            <option value="precio-desc">Precio (mayor)</option>
+            <option value="precio-asc">Precio (menor)</option>
+            <option value="nombre-asc">Cliente (A-Z)</option>
+          </select>
+        </label>
       </div>
 
       <div class="lista-head">
