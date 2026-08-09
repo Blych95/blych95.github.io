@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro Torii</title>
+<meta name="description" content="Registro de figuras: ventas, apartados y tasas del día.">
+<meta name="theme-color" content="#0B0B0C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230B0B0C'/><g fill='%23BC002D'><rect x='3' y='6' width='26' height='3'/><rect x='5' y='11' width='22' height='2.5'/><rect x='8' y='9' width='3.5' height='18'/><rect x='20.5' y='9' width='3.5' height='18'/></g></svg>">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ NAVEGACIÓN ============ -->
+  <aside class="nav">
+    <div class="brand">
+      <svg class="torii" viewBox="0 0 64 52" aria-hidden="true">
+        <path d="M2 6h60l-4 6H6z"/>
+        <rect x="8" y="16" width="48" height="4.5"/>
+        <rect x="14" y="12" width="6.5" height="38"/>
+        <rect x="43.5" y="12" width="6.5" height="38"/>
+        <rect x="28" y="16" width="8" height="4.5" opacity=".55"/>
+      </svg>
+      <div class="brand-text">
+        <span class="brand-name">Registro Torii</span>
+        <span class="brand-sub">鳥居 · figuras</span>
+      </div>
+    </div>
+
+    <nav class="nav-list" role="tablist">
+      <button class="nav-item is-active" data-vista="dashboard" role="tab"><span class="kanji">概要</span> Dashboard</button>
+      <button class="nav-item" data-vista="lista" role="tab"><span class="kanji">検索</span> Registros</button>
+      <button class="nav-item" data-vista="registro" role="tab"><span class="kanji">記録</span> Nuevo registro</button>
+      <button class="nav-item" data-vista="config" role="tab"><span class="kanji">設定</span> Configuración</button>
+    </nav>
+
+    <div class="nav-rates">
+      <span class="nav-rates-title">Tasas del día</span>
+      <div class="nav-rate"><span>Bs</span><b id="navTasaBs">—</b></div>
+      <div class="nav-rate"><span>Pesos</span><b id="navTasaPeso">—</b></div>
+      <small id="navTasaFecha">Sin configurar</small>
+    </div>
+  </aside>
+
+  <!-- ============ CONTENIDO ============ -->
+  <main class="main">
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section class="vista is-active" id="vista-dashboard">
+      <header class="head">
+        <div>
+          <span class="eyebrow">概要</span>
+          <h1>Dashboard</h1>
+        </div>
+        <p class="head-note" id="fechaHoy"></p>
+      </header>
+
+      <div class="stat-row">
+        <article class="stat">
+          <span class="stat-label">Registros hoy</span>
+          <b class="stat-num" id="kpiHoy">0</b>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Esta semana</span>
+          <b class="stat-num" id="kpiSemana">0</b>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Este mes</span>
+          <b class="stat-num" id="kpiMes">0</b>
+        </article>
+        <article class="stat">
+          <span class="stat-label">Total histórico</span>
+          <b class="stat-num" id="kpiTotal">0</b>
+        </article>
+      </div>
+
+      <div class="grid-2">
+        <article class="card money-card">
+          <span class="card-title">Dinero acumulado <em>solo pagados</em></span>
+          <div class="money-usd"><span>$</span><b id="dineroUsd">0,00</b></div>
+          <div class="money-alt">
+            <div><span>Bolívares</span><b id="dineroBs">—</b></div>
+            <div><span>Pesos</span><b id="dineroPeso">—</b></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="card-title">Estado de los registros</span>
+          <div class="estado-split">
+            <div class="estado-box pagado">
+              <b id="kpiPagados">0</b>
+              <span>Pagados</span>
+              <small id="kpiPagadosMonto">$0,00</small>
+            </div>
+            <div class="estado-box apartado">
+              <b id="kpiApartados">0</b>
+              <span>Apartados</span>
+              <small id="kpiApartadosMonto">$0,00</small>
+            </div>
+          </div>
+          <div class="mini-rows">
+            <div class="mini-row"><span>Abonado en apartados</span><b id="kpiAbonado">$0,00</b></div>
+            <div class="mini-row"><span>Por cobrar</span><b id="kpiPorCobrar" class="rojo">$0,00</b></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <span class="card-title">Últimos 7 días</span>
+          <div class="chart" id="chart7"></div>
+        </article>
+
+        <article class="card">
+          <span class="card-title">Movimientos recientes</span>
+          <ul class="recientes" id="recientes"></ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ---------- LISTA / BÚSQUEDA ---------- -->
+    <section class="vista" id="vista-lista">
+      <header class="head">
+        <div>
+          <span class="eyebrow">検索</span>
+          <h1>Registros</h1>
+        </div>
+        <button class="btn btn-ghost" id="btnLimpiar">Limpiar filtros</button>
+      </header>
+
+      <div class="card filtros">
+        <div class="chips" id="chipsFecha">
+          <button class="chip is-active" data-rango="todo">Todo</button>
+          <button class="chip" data-rango="hoy">Hoy</button>
+          <button class="chip" data-rango="semana">Esta semana</button>
+          <button class="chip" data-rango="mes">Este mes</button>
+          <button class="chip" data-rango="custom">Personalizado</button>
+        </div>
+
+        <div class="rango-custom" id="rangoCustom" hidden>
+          <label>Desde <input type="date" id="fDesde"></label>
+          <label>Hasta <input type="date" id="fHasta"></label>
+        </div>
+
+        <div class="filtros-grid">
+          <label>Nombre del cliente <input type="text" id="fNombre" placeholder="Buscar cliente…"></label>
+          <label>Figura <input type="text" id="fFigura" placeholder="Buscar figura…"></label>
+          <label>Estado
+            <select id="fEstado">
+              <option value="">Todos</option>
+              <option value="pagado">Pagado</option>
+              <option value="apartado">Apartado</option>
+            </select>
+          </label>
+          <label>Método de pago <select id="fMetodo"></select></label>
+          <label>Precio desde <input type="number" id="fPrecioMin" min="0" step="0.01" placeholder="$ mín."></label>
+          <label>Precio hasta <input type="number" id="fPrecioMax" min="0" step="0.01" placeholder="$ máx."></label>
+        </div>
+
+        <div class="filtros-grid" id="filtrosExtra"></div>
+
+        <div class="filtros-pie">
+          <label class="orden">Ordenar por
+            <select id="fOrden">
+              <option value="fecha-desc">Fecha (más reciente)</option>
+              <option value="fecha-asc">Fecha (más antigua)</option>
+              <option value="precio-desc">Precio (mayor)</option>
+              <option value="precio-asc">Precio (menor)</option>
+              <option value="nombre-asc">Cliente (A-Z)</option>
+            </select>
+          </label>
+          <p class="resumen-busqueda" id="resumenBusqueda"></p>
+        </div>
+      </div>
+
+      <div class="lista-head">
+        <span>Fecha</span><span>Cliente</span><span>Figura</span><span>Método</span><span class="ta-r">Precio</span><span>Estado</span>
+      </div>
+      <div id="lista" class="lista"></div>
+    </section>
+
+    <!-- ---------- REGISTRO ---------- -->
+    <section class="vista" id="vista-registro">
+      <header class="head">
+        <div>
+          <span class="eyebrow">記録</span>
+          <h1 id="tituloRegistro">Nuevo registro</h1>
+        </div>
+        <button class="btn btn-ghost" id="btnCancelarEdicion" hidden>Cancelar edición</button>
+      </header>
+
+      <form class="card form" id="formRegistro" autocomplete="off">
+        <div class="form-grid">
+          <label>Fecha <input type="date" id="rFecha" required>
+            <small class="hint" id="rFechaHint">—</small>
+          </label>
+          <label>Nombre del cliente <input type="text" id="rNombre" required placeholder="Ej. Ana Pérez"></label>
+          <label>Figura <input type="text" id="rFigura" required placeholder="Ej. Nendoroid Gojo Satoru"></label>
+          <label>Método de pago <select id="rMetodo" required></select></label>
+          <label>Precio en dólares <input type="number" id="rPrecio" min="0" step="0.01" required placeholder="0.00"></label>
+          <div class="campo">
+            <span class="campo-label">Estado</span>
+            <div class="segmented" id="rEstado">
+              <button type="button" class="seg is-active" data-estado="pagado">Pagado</button>
+              <button type="button" class="seg" data-estado="apartado">Apartado</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="camposExtra" class="form-grid"></div>
+
+        <div class="abono-inicial" id="abonoInicial" hidden>
+          <label>Abono inicial <span class="opcional">opcional</span>
+            <input type="number" id="rAbono" min="0" step="0.01" placeholder="0.00">
+          </label>
+          <label>Nota <span class="opcional">opcional</span>
+            <input type="text" id="rNota" placeholder="Ej. abona el resto el 30">
+          </label>
+        </div>
+
+        <div class="preview" id="previewPrecio">
+          <span>Equivalencias</span>
+          <div><b id="prevBs">Bs —</b><b id="prevPeso">$ — COP</b></div>
+        </div>
+
+        <div class="form-acciones">
+          <button type="submit" class="btn btn-rojo" id="btnGuardar">Guardar registro</button>
+          <button type="button" class="btn btn-ghost" id="btnVaciar">Vaciar campos</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---------- CONFIGURACIÓN ---------- -->
+    <section class="vista" id="vista-config">
+      <header class="head">
+        <div>
+          <span class="eyebrow">設定</span>
+          <h1>Configuración</h1>
+        </div>
+      </header>
+
+      <article class="card">
+        <span class="card-title">Tasas del día</span>
+        <p class="card-desc">Se aplican a todos los precios de la aplicación al instante.</p>
+        <form class="tasas-form" id="formTasas">
+          <label>Bolívares por 1 dólar <input type="number" id="cTasaBs" min="0" step="0.0001" placeholder="0.00"></label>
+          <label>Pesos por 1 dólar <input type="number" id="cTasaPeso" min="0" step="0.0001" placeholder="0.00"></label>
+          <button class="btn btn-rojo" type="submit">Guardar tasas</button>
+        </form>
+        <p class="tasa-ejemplo" id="tasaEjemplo"></p>
+      </article>
+
+      <article class="card">
+        <span class="card-title">Métodos de pago</span>
+        <p class="card-desc">Aparecen en el formulario de registro y en el filtro de búsqueda.</p>
+        <div class="tags" id="listaMetodos"></div>
+        <form class="inline-form" id="formMetodo">
+          <input type="text" id="nuevoMetodo" placeholder="Ej. Zinli" required>
+          <button class="btn btn-linea" type="submit">Añadir método</button>
+        </form>
+      </article>
+
+      <article class="card">
+        <span class="card-title">Campos personalizados</span>
+        <p class="card-desc">Añade campos propios al registro. Cada campo creado aparece también como filtro en la búsqueda.</p>
+        <div id="listaCampos" class="campos-lista"></div>
+        <form class="campo-form" id="formCampo">
+          <label>Nombre del campo <input type="text" id="cCampoNombre" placeholder="Ej. Escala" required></label>
+          <label>Tipo
+            <select id="cCampoTipo">
+              <option value="texto">Texto</option>
+              <option value="numero">Número</option>
+              <option value="lista">Lista de opciones</option>
+              <option value="fecha">Fecha</option>
+            </select>
+          </label>
+          <label id="wrapOpciones" hidden>Opciones separadas por coma <input type="text" id="cCampoOpciones" placeholder="Ej. 1/7, 1/8, Nendoroid"></label>
+          <button class="btn btn-linea" type="submit">Añadir campo</button>
+        </form>
+      </article>
+
+      <article class="card">
+        <span class="card-title">Datos</span>
+        <p class="card-desc">Todo se guarda en este navegador. Descarga un respaldo antes de limpiar el historial o cambiar de dispositivo.</p>
+        <div class="acciones-datos">
+          <button class="btn btn-linea" id="btnExportar">Descargar respaldo (JSON)</button>
+          <button class="btn btn-linea" id="btnCsv">Descargar CSV</button>
+          <label class="btn btn-linea file-btn">Importar respaldo<input type="file" id="inputImportar" accept="application/json,.json" hidden></label>
+          <button class="btn btn-peligro" id="btnBorrarTodo">Borrar todos los datos</button>
+        </div>
+        <p class="card-desc" id="infoAlmacen"></p>
+      </article>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ NAV MÓVIL ============ -->
+<nav class="tabbar">
+  <button class="tab is-active" data-vista="dashboard"><span class="kanji">概要</span>Inicio</button>
+  <button class="tab" data-vista="lista"><span class="kanji">検索</span>Registros</button>
+  <button class="tab" data-vista="registro"><span class="kanji">記録</span>Nuevo</button>
+  <button class="tab" data-vista="config"><span class="kanji">設定</span>Ajustes</button>
+</nav>
+
+<!-- ============ DETALLE ============ -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-fondo" data-cerrar></div>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="mFigura">
+    <button class="modal-x" data-cerrar aria-label="Cerrar">✕</button>
+    <div id="modalContenido"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
