@@ -78,7 +78,7 @@ button,input,select{ font-family:inherit; font-size:inherit; color:inherit; }
   top:0;
   height:100vh;
 }
-.brand{ display:flex; align-items:center; gap:11px; }
+.brand{ display:flex; align-items:center; gap:11px; flex-wrap:wrap; }
 .torii{ width:38px; height:31px; fill:var(--aka); flex:none; }
 .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
 .brand-name{ font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:.2px; }
@@ -458,9 +458,22 @@ select{ cursor:pointer; }
   box-shadow:0 12px 30px rgba(0,0,0,.5);
   animation:toastIn .25s ease both;
   max-width:330px;
+  display:flex; align-items:center; gap:12px;
 }
 .toast.error{ border-left-color:var(--aka-vivo); }
 .toast.info{ border-left-color:var(--gris); }
+.toast-btn{
+  flex:none; background:var(--aka); color:#fff; border:0;
+  border-radius:var(--r-s); padding:6px 12px; font-size:13px; cursor:pointer;
+}
+.toast-btn:hover{ background:var(--aka-vivo); }
+
+.chip-offline{
+  font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--kaki); border:1px solid rgba(232,137,43,.4);
+  background:rgba(232,137,43,.1);
+  border-radius:999px; padding:3px 9px; white-space:nowrap;
+}
 @keyframes toastIn{ from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:none; } }
 
 /* ---------------- Tabbar móvil ---------------- */

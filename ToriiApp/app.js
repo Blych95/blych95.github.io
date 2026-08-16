@@ -112,13 +112,27 @@ function restante(r){
 /* ==========================================================
    3. Avisos
    ========================================================== */
-function aviso(texto, tipo = 'ok'){
+function aviso(texto, tipo = 'ok', accion = null){
   const cont = $('#toasts');
   const t = document.createElement('div');
   t.className = 'toast ' + tipo;
-  t.textContent = texto;
+
+  const p = document.createElement('span');
+  p.textContent = texto;
+  t.appendChild(p);
+
+  if(accion){
+    const b = document.createElement('button');
+    b.className = 'toast-btn';
+    b.textContent = accion.texto;
+    b.addEventListener('click', () => { t.remove(); accion.fn(); });
+    t.appendChild(b);
+  }
+
   cont.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+  if(!accion){
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+  }
 }
 
 /* ==========================================================
@@ -818,3 +832,39 @@ function iniciarUI(){
 cargar();
 iniciarUI();
 irA('dashboard');
+
+/* ==========================================================
+   12. Funcionamiento sin internet
+   ========================================================== */
+function pintarEstadoRed(){
+  $('#estadoRed').hidden = navigator.onLine !== false;
+}
+window.addEventListener('online',  () => { pintarEstadoRed(); aviso('Conexión restablecida.', 'info'); });
+window.addEventListener('offline', () => { pintarEstadoRed(); aviso('Sin conexión: la app sigue funcionando.', 'info'); });
+pintarEstadoRed();
+
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const nuevo = reg.installing;
+        if(!nuevo) return;
+        nuevo.addEventListener('statechange', () => {
+          if(nuevo.state === 'installed' && navigator.serviceWorker.controller){
+            aviso('Hay una versión nueva de la app.', 'info', {
+              texto: 'Actualizar',
+              fn: () => nuevo.postMessage({ tipo: 'saltar' })
+            });
+          }
+        });
+      });
+    }).catch(() => { /* sin service worker la app funciona igual, solo pierde el modo offline */ });
+  });
+
+  let recargando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(recargando) return;
+    recargando = true;
+    location.reload();
+  });
+}

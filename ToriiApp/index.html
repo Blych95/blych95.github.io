@@ -6,6 +6,12 @@
 <title>Registro Torii</title>
 <meta name="description" content="Registro de figuras: ventas, apartados y tasas del día.">
 <meta name="theme-color" content="#0B0B0C">
+<link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Torii">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -30,6 +36,7 @@
         <span class="brand-name">Registro Torii</span>
         <span class="brand-sub">鳥居 · figuras</span>
       </div>
+      <span class="chip-offline" id="estadoRed" hidden>Sin conexión</span>
     </div>
 
     <nav class="nav-list" role="tablist">
