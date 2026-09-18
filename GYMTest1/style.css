@@ -1,0 +1,161 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #121212;
+    color: #ffffff;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    color: #00ffcc;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+h2 {
+    color: #aaaaaa;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.form-section, .records-section {
+    background: #1e1e1e;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+}
+
+.input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-group {
+    display: flex;
+    gap: 15px;
+}
+
+.media-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    background: #252525;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px dashed #444;
+}
+
+.stats-group .input-group {
+    flex: 1;
+}
+
+label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #ccc;
+}
+
+input, select {
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #2a2a2a;
+    color: white;
+    outline: none;
+}
+
+input:focus, select:focus {
+    border-color: #00ffcc;
+}
+
+input[type="file"] {
+    background: transparent;
+    border: none;
+    padding: 5px 0;
+}
+
+button {
+    background: #00ffcc;
+    color: #121212;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    margin-top: 15px;
+}
+
+button:hover {
+    background: #00cca3;
+}
+
+.records-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.record-card {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 5px solid #00ffcc;
+    position: relative;
+}
+
+.record-card h3 {
+    color: #00ffcc;
+    margin-bottom: 10px;
+}
+
+.record-card p {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.media-container {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.media-container img, .media-container video {
+    width: 100%;
+    border-radius: 6px;
+    max-height: 200px;
+    object-fit: cover;
+    background: #111;
+}
+
+.btn-delete {
+    background: #ff4444;
+    margin-top: 15px;
+    padding: 8px;
+    font-size: 12px;
+}
+
+.btn-delete:hover {
+    background: #cc0000;
+}
