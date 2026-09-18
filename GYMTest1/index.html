@@ -1,74 +1,571 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Diario de Entrenamiento</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlychGym - Registro de Entrenamientos y Rachas Personalizadas</title>
+  <meta name="description" content="BlychGym: Tu app de seguimiento de entrenamientos con sistema de rachas inteligentes que solo cuentan tus días programados sin penalizar tus descansos.">
+  <meta name="theme-color" content="#0b0f19">
+
+  <!-- Estilos del Sistema de Diseño -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Registro de Entrenamiento</h1>
 
-        <!-- Formulario de Ingreso -->
-        <section class="form-section">
-            <h2>Nueva Marca / Ejercicio</h2>
-            <form id="workout-form">
-                <div class="input-group">
-                    <label for="day">Día de la semana:</label>
-                    <select id="day" required>
-                        <option value="Lunes">Lunes</option>
-                        <option value="Martes">Martes</option>
-                        <option value="Miércoles">Miércoles</option>
-                        <option value="Jueves">Jueves</option>
-                        <option value="Viernes">Viernes</option>
-                        <option value="Sábado">Sábado</option>
-                        <option value="Domingo">Domingo</option>
-                    </select>
-                </div>
-                
-                <div class="input-group">
-                    <label for="exercise">Nombre del Ejercicio:</label>
-                    <input type="text" id="exercise" placeholder="Ej. Dominadas, Press de Banca..." required>
-                </div>
+  <div class="app-container">
 
-                <div class="stats-group">
-                    <div class="input-group">
-                        <label for="sets">Series:</label>
-                        <input type="number" id="sets" min="1" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="reps">Repeticiones:</label>
-                        <input type="number" id="reps" min="1" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="weight">Peso (kg):</label>
-                        <input type="number" id="weight" step="0.5" min="0" required>
-                    </div>
-                </div>
+    <!-- ==========================================================================
+         Barra Superior de Navegación & Racha
+         ========================================================================== -->
+    <header class="header-bar">
+      <a href="#" class="brand-wrapper" id="brandHomeLink" title="BlychGym">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title">BLYCH<span style="color: var(--lime-primary);">GYM</span></div>
+          <div class="brand-tag">Smart Streak Tracker</div>
+        </div>
+      </a>
 
-                <div class="media-group">
-                    <div class="input-group">
-                        <label for="guide-media">Guía (Cómo se hace - Foto/Video):</label>
-                        <input type="file" id="guide-media" accept="image/*,video/*">
-                    </div>
-                    <div class="input-group">
-                        <label for="progress-media">Tu foto de avance:</label>
-                        <input type="file" id="progress-media" accept="image/*">
-                    </div>
-                </div>
+      <!-- Widget de Racha Destacado -->
+      <div class="header-streak-badge" id="headerStreakBadge" title="Ver detalles de tu racha y días configurados">
+        <span class="flame-icon-animated">🔥</span>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <div style="display: flex; align-items: baseline; gap: 4px;">
+            <span class="streak-number" id="streakCountHeader">0</span>
+            <span style="font-size: 0.75rem; color: var(--fire-yellow); font-weight: 700;">DÍAS</span>
+          </div>
+          <span class="streak-label" id="streakLabelHeader">Racha Activa</span>
+        </div>
+      </div>
 
-                <button type="submit">Guardar Registro</button>
-            </form>
-        </section>
+      <!-- Botones de Acción Rápida -->
+      <div class="header-actions">
+        <button class="btn-icon" id="btnOpenScheduleModal" title="Configurar Horario de Entrenamiento">
+          📅
+        </button>
+        <button class="btn-icon" id="btnOpenSettingsModal" title="Ajustes y Respaldo de Datos">
+          ⚙️
+        </button>
+      </div>
+    </header>
 
-        <!-- Lista de Registros -->
-        <section class="records-section">
-            <h2>Mis Rutinas</h2>
-            <div id="records-list" class="records-grid"></div>
-        </section>
+    <!-- ==========================================================================
+         Banner Hero: Estado del Día de Hoy
+         ========================================================================== -->
+    <section class="hero-status-banner" id="heroStatusBanner">
+      <div class="banner-grid">
+        <div>
+          <div class="today-meta">
+            <span class="badge-pill" id="todayStatusBadge">Cargando...</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);" id="todayDateReadable">--</span>
+          </div>
+          <h1 class="today-headline" id="todayHeadline">¡Prepárate para entrenar!</h1>
+          <p class="today-subtext" id="todayExplanation">
+            Tu racha se basa en tus días configurados. Los días de descanso no rompen tu racha.
+          </p>
+        </div>
+
+        <div class="banner-actions">
+          <button class="btn-primary" id="btnHeroQuickStart">
+            <span>⚡</span> Iniciar Entrenamiento de Hoy
+          </button>
+          <button class="btn-secondary" id="btnQuickConfigDays">
+            <span>⚙️</span> Cambiar Mis Días
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         Tira Semanal Dinámica (Weekly Glance)
+         ========================================================================== -->
+    <section class="week-strip-card">
+      <div class="week-strip-header">
+        <div class="week-title">
+          <span>🗓️</span> Tu Semana de Entrenamiento
+        </div>
+        <div class="week-schedule-info" id="weekScheduleInfo">
+          Configurado: Lun a Vie
+        </div>
+      </div>
+      <div class="week-days-grid" id="weekDaysContainer">
+        <!-- Renderizado dinámicamente por JavaScript -->
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         Pestañas Principales (Tabs)
+         ========================================================================== -->
+    <nav class="tabs-navigation" aria-label="Secciones de BlychGym">
+      <button class="tab-button active" data-tab="tab-routines">
+        <span>🏋️‍♂️</span> Rutinas
+      </button>
+      <button class="tab-button" data-tab="tab-active-session" id="tabBtnActiveSession">
+        <span>⚡</span> Sesión Activa <span id="activeSessionIndicator" style="display:none; color: var(--lime-primary);">●</span>
+      </button>
+      <button class="tab-button" data-tab="tab-calendar">
+        <span>📅</span> Calendario y Rachas
+      </button>
+      <button class="tab-button" data-tab="tab-stats">
+        <span>📈</span> Estadísticas & PRs
+      </button>
+    </nav>
+
+    <!-- ==========================================================================
+         VISTA 1: Rutinas y Catálogo
+         ========================================================================== -->
+    <main class="tab-panel active" id="tab-routines">
+      <div class="routines-header">
+        <h2 class="section-title"><span>📋</span> Rutinas Disponibles</h2>
+        <button class="btn-secondary" id="btnOpenNewRoutineModal">
+          <span>➕</span> Nueva Rutina
+        </button>
+      </div>
+
+      <div class="routines-grid" id="routinesContainer">
+        <!-- Rutinas inyectadas dinámicamente -->
+      </div>
+    </main>
+
+    <!-- ==========================================================================
+         VISTA 2: Modo Entrenamiento Activo (Live Session)
+         ========================================================================== -->
+    <section class="tab-panel" id="tab-active-session">
+      <div id="noActiveSessionView" style="text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-glass);">
+        <div style="font-size: 3.5rem; margin-bottom: 12px;">🏋️</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 8px;">No hay ningún entrenamiento activo</h2>
+        <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 20px auto;">
+          Selecciona una de tus rutinas o inicia una sesión libre para registrar tus series, pesos y sumar a tu racha de hoy.
+        </p>
+        <button class="btn-primary" id="btnStartQuickFreeSession">
+          <span>⚡</span> Comenzar Sesión Rápida
+        </button>
+      </div>
+
+      <div class="active-session-container" id="activeSessionView" style="display: none;">
+        <!-- Cabecera de la Sesión en Vivo -->
+        <div class="active-session-header">
+          <div class="active-session-title-wrap">
+            <span class="active-session-badge"><span>●</span> EN PROGRESO</span>
+            <h2 class="active-session-name" id="activeSessionRoutineName">Push Day</h2>
+          </div>
+
+          <div class="session-live-timer" id="sessionLiveTimerDisplay">
+            <span>⏱️</span> <span id="sessionTimerText">00:00</span>
+          </div>
+        </div>
+
+        <!-- Widget de Temporizador de Descanso (Rest Timer) -->
+        <div class="rest-timer-box" id="restTimerBox">
+          <div class="rest-timer-display">
+            <div style="font-size: 1.8rem;">⏳</div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--cyan-primary); font-weight: 700; text-transform: uppercase;">Descanso Entre Series</div>
+              <div class="rest-timer-val" id="restTimerDisplay">01:30</div>
+            </div>
+          </div>
+
+          <div class="rest-timer-controls">
+            <button class="btn-timer-preset" data-seconds="60">60s</button>
+            <button class="btn-timer-preset" data-seconds="90">90s</button>
+            <button class="btn-timer-preset" data-seconds="120">120s</button>
+            <button class="btn-secondary" id="btnStartRestTimer" style="padding: 6px 14px; font-size: 0.85rem;">
+              ▶️ Iniciar
+            </button>
+            <button class="btn-icon" id="btnSkipRestTimer" title="Saltar descanso" style="width: 34px; height: 34px;">
+              ⏹️
+            </button>
+            <button class="btn-icon" id="btnToggleSound" title="Sonido de alerta" style="width: 34px; height: 34px;">
+              🔔
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de Ejercicios de la Sesión -->
+        <div id="activeExercisesList" style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- Inyectado por JS -->
+        </div>
+
+        <!-- Acciones Inferiores de Sesión Activa -->
+        <div class="active-session-bottom-bar">
+          <button class="btn-secondary" id="btnAddExerciseToSession">
+            <span>➕</span> Añadir Ejercicio a la Sesión
+          </button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-secondary" id="btnCancelSession" style="color: var(--status-missed);">
+              Cancelar
+            </button>
+            <button class="btn-primary" id="btnFinishSession">
+              <span>🏆</span> Finalizar Entrenamiento
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         VISTA 3: Calendario Interactivo y Rachas
+         ========================================================================== -->
+    <section class="tab-panel" id="tab-calendar">
+      <!-- Tarjetas Resumen de Métricas -->
+      <div class="stats-summary-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper" style="background: var(--fire-soft); color: var(--fire-primary);">
+            🔥
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Racha Actual</span>
+            <span class="stat-value" id="statsCurrentStreak">0</span>
+            <span class="stat-subtext">Días programados consecutivos</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper" style="background: rgba(234, 179, 8, 0.15); color: #eab308;">
+            🏆
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Récord Histórico</span>
+            <span class="stat-value" id="statsBestStreak">0</span>
+            <span class="stat-subtext">Mejor racha alcanzada</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper" style="background: var(--lime-soft); color: var(--lime-primary);">
+            📊
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Cumplimiento (30D)</span>
+            <span class="stat-value" id="statsComplianceRate">0%</span>
+            <span class="stat-subtext">De tus días configurados</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper" style="background: var(--cyan-soft); color: var(--cyan-primary);">
+            💪
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Sesiones</span>
+            <span class="stat-value" id="statsTotalSessions">0</span>
+            <span class="stat-subtext">Entrenamientos registrados</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendario Mensual -->
+      <div class="calendar-widget">
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" id="btnPrevMonth" title="Mes Anterior">◀</button>
+          <div class="calendar-month-title" id="calendarMonthTitle">Septiembre 2026</div>
+          <button class="calendar-nav-btn" id="btnNextMonth" title="Mes Siguiente">▶</button>
+        </div>
+
+        <div class="calendar-weekdays-row">
+          <div class="calendar-weekday-th">Lun</div>
+          <div class="calendar-weekday-th">Mar</div>
+          <div class="calendar-weekday-th">Mié</div>
+          <div class="calendar-weekday-th">Jue</div>
+          <div class="calendar-weekday-th">Vie</div>
+          <div class="calendar-weekday-th">Sáb</div>
+          <div class="calendar-weekday-th">Dom</div>
+        </div>
+
+        <div class="calendar-days-grid" id="calendarDaysGrid">
+          <!-- Celdas del calendario inyectadas dinámicamente -->
+        </div>
+
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <div class="legend-dot completed"></div>
+            <span>Entrenado</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot rest"></div>
+            <span>Descanso Programado (Protegido)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot missed"></div>
+            <span>Día Programado No Asistido</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot today"></div>
+            <span>Hoy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial Reciente de Sesiones -->
+      <div style="margin-top: 30px;">
+        <h3 class="section-title"><span>📜</span> Historial de Entrenamientos</h3>
+        <div class="history-feed" id="historyFeedContainer">
+          <!-- Inyectado por JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         VISTA 4: Estadísticas y Récords Personales (PRs)
+         ========================================================================== -->
+    <section class="tab-panel" id="tab-stats">
+      <div class="routines-header">
+        <h2 class="section-title"><span>🏆</span> Récords Personales (PRs)</h2>
+      </div>
+
+      <div class="routines-grid" id="prCardsContainer">
+        <!-- Renderizado dinámicamente -->
+      </div>
+
+      <div style="margin-top: 30px; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 24px;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 12px; color: var(--text-white);">
+          🛡️ Cómo Funciona la Protección de tu Racha
+        </h3>
+        <div style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">
+          <p>
+            • <strong>Días de tu Horario:</strong> Tú marcas los días específicos de la semana que te comprometes a ir al gimnasio (ejemplo: <em>Lunes a Viernes</em>).
+          </p>
+          <p>
+            • <strong>Días de Descanso Protegidos:</strong> Cualquier día fuera de tu horario (ejemplo: <em>Sábado y Domingo</em>) es considerado un día de recuperación física. Tu racha se congela intacta y NO se pierde.
+          </p>
+          <p>
+            • <strong>Continuidad Consecutiva:</strong> Al entrenar el Viernes (Día 5) y luego volver el Lunes (Día 6), tu racha suma consecutivamente sin interrupción.
+          </p>
+          <p>
+            • <strong>Días Perdidos:</strong> Si llega un día configurado (ej. Miércoles) y termina el día sin registrar sesión, la racha se reinicia para mantenerte motivado y disciplinado.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div> <!-- /app-container -->
+
+  <!-- ==========================================================================
+       MODAL 1: Configuración del Horario de Entrenamiento (Días Objetivo)
+       ========================================================================== -->
+  <div class="modal-overlay" id="modalSchedule">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>📅</span> Configurar Horario</h2>
+        <button class="modal-close-btn" data-close-modal="modalSchedule">&times;</button>
+      </div>
+
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 16px;">
+        Selecciona los días de la semana que vas al gimnasio. Tu racha <strong>únicamente contará estos días consecutivos</strong> y los demás serán descanso protegido.
+      </p>
+
+      <form id="formScheduleSettings">
+        <div class="form-group">
+          <label class="form-label">Días de Entrenamiento Semanales</label>
+          <div class="days-selector-grid">
+            <div>
+              <input type="checkbox" id="day-1" class="day-pill-checkbox" value="1" checked>
+              <label for="day-1" class="day-pill-label">
+                <span class="day-pill-code">L</span>
+                <span class="day-pill-sub">Lun</span>
+              </label>
+            </div>
+            <div>
+              <input type="checkbox" id="day-2" class="day-pill-checkbox" value="2" checked>
+              <label for="day-2" class="day-pill-label">
+                <span class="day-pill-code">M</span>
+                <span class="day-pill-sub">Mar</span>
+              </label>
+            </div>
+            <div>
+              <input type="checkbox" id="day-3" class="day-pill-checkbox" value="3" checked>
+              <label for="day-3" class="day-pill-label">
+                <span class="day-pill-code">X</span>
+                <span class="day-pill-sub">Mié</span>
+              </label>
+            </div>
+            <div>
+              <input type="checkbox" id="day-4" class="day-pill-checkbox" value="4" checked>
+              <label for="day-4" class="day-pill-label">
+                <span class="day-pill-code">J</span>
+                <span class="day-pill-sub">Jue</span>
+              </label>
+            </div>
+            <div>
+              <input type="checkbox" id="day-5" class="day-pill-checkbox" value="5" checked>
+              <label for="day-5" class="day-pill-label">
+                <span class="day-pill-code">V</span>
+                <span class="day-pill-sub">Vie</span>
+              </label>
+            </div>
+            <div>
+              <input type="checkbox" id="day-6" class="day-pill-checkbox" value="6">
+              <label for="day-6" class="day-pill-label">
+                <span class="day-pill-code">S</span>
+                <span class="day-pill-sub">Sáb</span>
+              </label>
+            </div>
+            <div>
+              <input type="checkbox" id="day-7" class="day-pill-checkbox" value="7">
+              <label for="day-7" class="day-pill-label">
+                <span class="day-pill-code">D</span>
+                <span class="day-pill-sub">Dom</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+          <button type="button" class="btn-secondary" id="btnPresetMonFri" style="font-size: 0.8rem; padding: 6px 10px;">
+            Lunes a Viernes (5d)
+          </button>
+          <button type="button" class="btn-secondary" id="btnPresetMonWedFri" style="font-size: 0.8rem; padding: 6px 10px;">
+            Lun - Mié - Vie (3d)
+          </button>
+          <button type="button" class="btn-secondary" id="btnPresetAllDays" style="font-size: 0.8rem; padding: 6px 10px;">
+            Todos los Días (7d)
+          </button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn-secondary" data-close-modal="modalSchedule">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Horario</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <script src="app.js"></script>
+  <!-- ==========================================================================
+       MODAL 2: Preferencias y Respaldo
+       ========================================================================== -->
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>⚙️</span> Ajustes & Datos</h2>
+        <button class="modal-close-btn" data-close-modal="modalSettings">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Unidad de Peso</label>
+        <select class="form-select" id="selectWeightUnit">
+          <option value="kg">Kilogramos (kg)</option>
+          <option value="lbs">Libras (lbs)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tiempo de Descanso Predeterminado</label>
+        <select class="form-select" id="selectDefaultRest">
+          <option value="60">60 segundos (1 min)</option>
+          <option value="90" selected>90 segundos (1.5 min)</option>
+          <option value="120">120 segundos (2 min)</option>
+          <option value="180">180 segundos (3 min)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Alertas Sonoras</label>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="checkSoundAlerts" checked style="width: 18px; height: 18px;">
+          <label for="checkSoundAlerts" style="font-size: 0.9rem; cursor: pointer;">Reproducir pitido al finalizar el descanso</label>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border-glass); margin: 20px 0;">
+
+      <h3 style="font-family: var(--font-heading); font-size: 1rem; margin-bottom: 12px;">Copia de Seguridad</h3>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+        <button class="btn-secondary" id="btnExportJson">
+          <span>💾</span> Exportar Datos (JSON)
+        </button>
+        <label class="btn-secondary" style="cursor: pointer;">
+          <span>📂</span> Importar Datos
+          <input type="file" id="fileImportJson" accept=".json" style="display: none;">
+        </label>
+        <button class="btn-secondary" id="btnResetData" style="color: var(--status-missed);">
+          <span>🗑️</span> Reiniciar Todo
+        </button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-primary" data-close-modal="modalSettings">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: Añadir Ejercicio a la Sesión / Catálogo
+       ========================================================================== -->
+  <div class="modal-overlay" id="modalAddExercise">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>💪</span> Biblioteca de Ejercicios</h2>
+        <button class="modal-close-btn" data-close-modal="modalAddExercise">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <input type="text" id="exerciseSearchInput" class="form-input" placeholder="Buscar ejercicio por nombre...">
+      </div>
+
+      <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px;" id="muscleFilterChips">
+        <button class="btn-secondary active" data-muscle="all" style="font-size: 0.75rem; padding: 4px 10px;">Todos</button>
+        <button class="btn-secondary" data-muscle="Pecho" style="font-size: 0.75rem; padding: 4px 10px;">Pecho</button>
+        <button class="btn-secondary" data-muscle="Espalda" style="font-size: 0.75rem; padding: 4px 10px;">Espalda</button>
+        <button class="btn-secondary" data-muscle="Piernas" style="font-size: 0.75rem; padding: 4px 10px;">Piernas</button>
+        <button class="btn-secondary" data-muscle="Hombros" style="font-size: 0.75rem; padding: 4px 10px;">Hombros</button>
+        <button class="btn-secondary" data-muscle="Bíceps" style="font-size: 0.75rem; padding: 4px 10px;">Bíceps</button>
+        <button class="btn-secondary" data-muscle="Tríceps" style="font-size: 0.75rem; padding: 4px 10px;">Tríceps</button>
+        <button class="btn-secondary" data-muscle="Core" style="font-size: 0.75rem; padding: 4px 10px;">Core</button>
+      </div>
+
+      <div style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;" id="exerciseCatalogueList">
+        <!-- Inyectado por JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 4: Detalle de Sesión del Calendario
+       ========================================================================== -->
+  <div class="modal-overlay" id="modalSessionDetail">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="detailModalTitle">Detalle de Sesión</h2>
+        <button class="modal-close-btn" data-close-modal="modalSessionDetail">&times;</button>
+      </div>
+      <div id="detailModalContent">
+        <!-- Renderizado dinámico -->
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn-secondary" data-close-modal="modalSessionDetail">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 5: Celebración de Racha Incremental
+       ========================================================================== -->
+  <div class="modal-overlay" id="modalCelebration">
+    <div class="modal-content" style="max-width: 440px; text-align: center;">
+      <div class="streak-celebration-dialog">
+        <div class="celebration-flame">🔥</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: #fff;">¡RACHA AUMENTADA!</h2>
+        <div class="celebration-streak-count" id="celebrationStreakNumber">5</div>
+        <p style="color: var(--fire-yellow); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+          Días Programados Consecutivos
+        </p>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;" id="celebrationMessage">
+          ¡Excelente disciplina! Tu horario de Lunes a Viernes sigue impecable.
+        </p>
+        <button class="btn-primary" data-close-modal="modalCelebration" style="width: 100%; margin-top: 10px;">
+          ¡A Seguir Rompiéndola! 💪
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor de Alertas Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts de la Aplicación -->
+  <script src="js/streak.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
