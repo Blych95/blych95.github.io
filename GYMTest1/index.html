@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Diario de Entrenamiento</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Entrenamiento</h1>
+
+        <!-- Formulario de Ingreso -->
+        <section class="form-section">
+            <h2>Nueva Marca / Ejercicio</h2>
+            <form id="workout-form">
+                <div class="input-group">
+                    <label for="day">Día de la semana:</label>
+                    <select id="day" required>
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                        <option value="Domingo">Domingo</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="exercise">Nombre del Ejercicio:</label>
+                    <input type="text" id="exercise" placeholder="Ej. Dominadas, Press de Banca..." required>
+                </div>
+
+                <div class="stats-group">
+                    <div class="input-group">
+                        <label for="sets">Series:</label>
+                        <input type="number" id="sets" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="reps">Repeticiones:</label>
+                        <input type="number" id="reps" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="weight">Peso (kg):</label>
+                        <input type="number" id="weight" step="0.5" min="0" required>
+                    </div>
+                </div>
+
+                <div class="media-group">
+                    <div class="input-group">
+                        <label for="guide-media">Guía (Cómo se hace - Foto/Video):</label>
+                        <input type="file" id="guide-media" accept="image/*,video/*">
+                    </div>
+                    <div class="input-group">
+                        <label for="progress-media">Tu foto de avance:</label>
+                        <input type="file" id="progress-media" accept="image/*">
+                    </div>
+                </div>
+
+                <button type="submit">Guardar Registro</button>
+            </form>
+        </section>
+
+        <!-- Lista de Registros -->
+        <section class="records-section">
+            <h2>Mis Rutinas</h2>
+            <div id="records-list" class="records-grid"></div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
