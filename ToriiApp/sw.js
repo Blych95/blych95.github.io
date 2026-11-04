@@ -7,7 +7,7 @@
    versión nueva y le pide al usuario actualizar.
    ========================================================== */
 
-const VERSION   = 'v3';
+const VERSION   = 'v2';
 const CACHE_APP = 'torii-app-' + VERSION;
 const CACHE_EXT = 'torii-externos-' + VERSION;
 

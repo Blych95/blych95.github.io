@@ -126,7 +126,7 @@ function exportarCliente(id){
   if(!rs.length){ aviso('Este cliente aún no tiene registros.', 'error'); return; }
   const lbl = (t, v, s = 'def') => [[t, 'lbl'], [v, s]];
   const bloque = [[['Registro Torii — Historial de cliente', 'tit']],
-    lbl('Cliente', `${c.nombre} (${c.idc})`), lbl('Teléfono', c.telefono || '—'), lbl('Cédula', c.cedula || '—'), lbl('Registrado en la app', fechaAlta(c), 'fpl'), lbl('Categorías', c.categorias.join(', ') || '—'), lbl('Primera compra', primeraCompra(c), 'fpl'),
+    lbl('Cliente', c.nombre), lbl('Categorías', c.categorias.join(', ') || '—'), lbl('Primera compra', primeraCompra(c), 'fpl'),
     lbl('Pagadas', rs.filter(r => r.estado === 'pagado').length), lbl('Apartadas', rs.filter(r => r.estado === 'apartado').length)];
   bajarXlsx(`cliente-${norm(c.nombre).replace(/[^a-z0-9]+/g, '-')}.xlsx`, [hojaRegistros('Historial', bloque, rs, true)]);
 }
