@@ -7,7 +7,7 @@
    versión nueva y le pide al usuario actualizar.
    ========================================================== */
 
-const VERSION   = 'v1';
+const VERSION   = 'v2';
 const CACHE_APP = 'torii-app-' + VERSION;
 const CACHE_EXT = 'torii-externos-' + VERSION;
 
@@ -16,6 +16,8 @@ const ESENCIALES = [
   './index.html',
   './styles.css',
   './app.js',
+  './excel.js',
+  './clientes.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',

@@ -11,10 +11,11 @@ const CONFIG_BASE = {
   tasaPeso: 0,
   tasasFecha: null,
   metodosPago: ['Efectivo $', 'Zelle', 'Pago móvil', 'Binance', 'Transferencia Bs', 'Pesos'],
-  campos: []
+  campos: [],
+  categoriasCliente: ['Estrella', 'Nuevo', 'Frecuente']
 };
 
-let estado = { registros: [], config: clonar(CONFIG_BASE) };
+let estado = { registros: [], clientes: [], config: clonar(CONFIG_BASE) };
 let editandoId = null;
 let detalleId = null;
 
@@ -34,6 +35,7 @@ function cargar(){
   try{
     const data = JSON.parse(crudo);
     estado.registros = Array.isArray(data.registros) ? data.registros : [];
+    estado.clientes = Array.isArray(data.clientes) ? data.clientes : [];
     estado.config = Object.assign(clonar(CONFIG_BASE), data.config || {});
     if(!Array.isArray(estado.config.metodosPago)) estado.config.metodosPago = clonar(CONFIG_BASE.metodosPago);
     if(!Array.isArray(estado.config.campos)) estado.config.campos = [];
@@ -145,6 +147,7 @@ function irA(vista){
   if(vista === 'dashboard') pintarDashboard();
   if(vista === 'lista') pintarLista();
   if(vista === 'config') pintarConfig();
+  if(vista === 'clientes') pintarClientes();
 }
 $$('.nav-item, .tab').forEach(b => b.addEventListener('click', () => irA(b.dataset.vista)));
 
@@ -347,7 +350,7 @@ function pintarLista(){
       <span class="c-figura">${esc(r.figura)}</span>
       <span class="c-metodo">${esc(r.metodo || '—')}</span>
       <span class="c-precio">${usd(r.precio)}</span>
-      <span class="c-estado"><span class="badge ${esc(r.estado)}">${r.estado === 'pagado' ? 'Pagado' : 'Apartado'}</span></span>
+      <span class="c-estado"><span class="badge ${esc(r.estado)}">${r.estado === 'pagado' ? 'Pagado' : 'Apartado'}</span>${limiteHtml(r)}</span>
     </button>`).join('')
     : `<div class="vacio"><b>Sin resultados</b>${estado.registros.length
         ? 'Ningún registro coincide con estos filtros. Prueba a limpiarlos.'
@@ -403,6 +406,7 @@ function abrirDetalle(id){
     <div class="m-datos">
       <div class="m-dato"><span>Fecha</span><b>${fmtFecha(r.fecha)}</b></div>
       <div class="m-dato"><span>Método de pago</span><b>${esc(r.metodo || '—')}</b></div>
+      ${plazoDatos(r)}
       ${extras}
     </div>
 
@@ -418,6 +422,7 @@ function abrirDetalle(id){
 
     <div class="m-acciones">
       ${r.estado === 'apartado' ? '<button class="btn btn-verde" id="btnPagado">Marcar como pagado</button>' : ''}
+      ${r.clienteId ? '<button class="btn btn-linea" id="btnVerCliente">Ver cliente</button>' : ''}
       <button class="btn btn-linea" id="btnEditar">Editar</button>
       <button class="btn btn-peligro" id="btnEliminar">Eliminar</button>
     </div>`;
@@ -426,6 +431,7 @@ function abrirDetalle(id){
   document.body.style.overflow = 'hidden';
 
   $('#btnEditar').addEventListener('click', () => { cerrarModal(); editarRegistro(id); });
+  const bv = $('#btnVerCliente'); if(bv) bv.addEventListener('click', () => abrirCliente(r.clienteId));
   $('#btnEliminar').addEventListener('click', () => eliminarRegistro(id));
   const bp = $('#btnPagado');
   if(bp) bp.addEventListener('click', () => marcarPagado(id));
@@ -438,7 +444,7 @@ function abrirDetalle(id){
     r.abonos = r.abonos || [];
     r.abonos.push({ id: uid(), fecha: hoyISO(), monto, nota: $('#aNota').value.trim() });
     if(abonado(r) >= (Number(r.precio) || 0)){
-      r.estado = 'pagado';
+      r.estado = 'pagado'; r.fechaPago = hoyISO();
       aviso('Apartado completado. El registro pasó a Pagado.');
     } else {
       aviso('Abono añadido. Faltan ' + usd(restante(r)) + '.');
@@ -465,7 +471,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('#modal'
 function marcarPagado(id){
   const r = estado.registros.find(x => x.id === id);
   if(!r) return;
-  r.estado = 'pagado';
+  r.estado = 'pagado'; r.fechaPago = hoyISO();
   r.actualizado = new Date().toISOString();
   guardar(); pintarLista(); pintarDashboard(); abrirDetalle(id);
   aviso('Registro marcado como pagado.');
@@ -503,6 +509,7 @@ function previewPrecio(){
   const p = Number($('#rPrecio').value) || 0;
   $('#prevBs').textContent   = bs(p);
   $('#prevPeso').textContent = pesos(p);
+  pintarExtrasForm();
 }
 
 function pintarMetodos(){
@@ -567,6 +574,7 @@ $('#formRegistro').addEventListener('submit', e => {
     extra,
     actualizado: new Date().toISOString()
   };
+  prepararRegistro(base, editandoId ? estado.registros.find(x => x.id === editandoId) : null);
 
   if(editandoId){
     const r = estado.registros.find(x => x.id === editandoId);
@@ -581,7 +589,7 @@ $('#formRegistro').addEventListener('submit', e => {
     const ab = Number($('#rAbono').value);
     if(nuevo.estado === 'apartado' && ab > 0){
       nuevo.abonos.push({ id: uid(), fecha: nuevo.fecha, monto: ab, nota: $('#rNota').value.trim() });
-      if(ab >= precio) nuevo.estado = 'pagado';
+      if(ab >= precio){ nuevo.estado = 'pagado'; nuevo.fechaPago = nuevo.fecha; }
     }
     estado.registros.push(nuevo);
     guardar();
@@ -745,6 +753,7 @@ function pintarConfig(){
   }));
 
   const bytes = new Blob([JSON.stringify(estado)]).size;
+  pintarConfigClientes();
   $('#infoAlmacen').textContent =
     `${estado.registros.length} registros guardados en este navegador · ${(bytes / 1024).toFixed(1)} KB`;
 
@@ -767,25 +776,6 @@ $('#btnExportar').addEventListener('click', () => {
   aviso('Respaldo descargado.');
 });
 
-$('#btnCsv').addEventListener('click', () => {
-  const campos = estado.config.campos;
-  const cab = ['Fecha','Cliente','Figura','Metodo','Precio USD','Precio Bs','Precio COP','Estado','Abonado','Restante', ...campos.map(c => c.etiqueta)];
-  const filas = [...estado.registros].sort((a, b) => (a.fecha||'').localeCompare(b.fecha||'')).map(r => {
-    const p = Number(r.precio) || 0;
-    return [
-      fmtFecha(r.fecha), r.nombre, r.figura, r.metodo, p,
-      (estado.config.tasaBs || 0) * p, (estado.config.tasaPeso || 0) * p,
-      r.estado, abonado(r), restante(r),
-      ...campos.map(c => (r.extra || {})[c.id] ?? '')
-    ];
-  });
-  const csv = [cab, ...filas]
-    .map(f => f.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\r\n');
-  descargar(`registro-torii-${hoyISO()}.csv`, '\uFEFF' + csv, 'text/csv;charset=utf-8');
-  aviso('CSV descargado.');
-});
-
 $('#inputImportar').addEventListener('change', e => {
   const file = e.target.files[0];
   if(!file) return;
@@ -796,8 +786,9 @@ $('#inputImportar').addEventListener('change', e => {
       if(!Array.isArray(data.registros)) throw new Error('formato');
       if(!confirm(`El respaldo trae ${data.registros.length} registros y reemplazará todo lo que hay ahora. ¿Continuar?`)) return;
       estado.registros = data.registros;
+      estado.clientes = Array.isArray(data.clientes) ? data.clientes : [];
       estado.config = Object.assign(clonar(CONFIG_BASE), data.config || {});
-      guardar(); iniciarUI();
+      migrar(); guardar(); iniciarUI();
       aviso('Respaldo importado.');
     }catch(err){
       aviso('Ese archivo no es un respaldo de Registro Torii.', 'error');
@@ -810,7 +801,7 @@ $('#inputImportar').addEventListener('change', e => {
 $('#btnBorrarTodo').addEventListener('click', () => {
   if(!confirm('Esto borra todos los registros y la configuración de este navegador. ¿Seguro?')) return;
   if(!confirm('Última confirmación: se perderá todo si no tienes respaldo. ¿Borrar?')) return;
-  estado = { registros: [], config: clonar(CONFIG_BASE) };
+  estado = { registros: [], clientes: [], config: clonar(CONFIG_BASE) };
   guardar(); iniciarUI();
   aviso('Todos los datos fueron borrados.', 'info');
 });
@@ -819,6 +810,7 @@ $('#btnBorrarTodo').addEventListener('click', () => {
    11. Arranque
    ========================================================== */
 function iniciarUI(){
+  iniciarClientes();
   pintarPanelFiltros();
   pintarMetodos();
   pintarCamposForm();
@@ -830,6 +822,7 @@ function iniciarUI(){
 }
 
 cargar();
+migrar();
 iniciarUI();
 irA('dashboard');
 

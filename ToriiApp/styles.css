@@ -544,3 +544,28 @@ select{ cursor:pointer; }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
 }
+
+/* ---------- Clientes y plazo de apartados ---------- */
+.lim{ display:block; margin-top:4px; font-family:var(--mono); font-size:11px; color:var(--gris); }
+.lim.pronto{ color:var(--kaki); } .lim.vencido{ color:var(--aka-vivo); font-weight:700; }
+.reg,.lista-head{ grid-template-columns:104px 1.2fr 1.6fr 1fr 108px 132px; }
+.plazo{ grid-column:1 / -1; margin:0; font-size:13px; color:var(--kaki); }
+.plazo:empty{ display:none; } .plazo b{ font-family:var(--mono); color:var(--kinari); }
+.chk{ flex-direction:row; align-items:center; gap:8px; margin-top:14px; font-size:13px; }
+.filtros-cli{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; }
+.clientes-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:12px; margin-top:12px; }
+.cli{ text-align:left; background:var(--sumi-2); border:1px solid var(--linea); border-top:2px solid var(--aka); border-radius:var(--r); padding:16px; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:.15s; }
+.cli:hover{ background:var(--sumi-3); transform:translateY(-2px); }
+.cli-nombre{ font-family:var(--display); font-size:18px; }
+.cli-datos{ display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--gris); } .cli-datos b{ color:var(--kinari); font-family:var(--mono); font-weight:400; }
+.tag-r{ padding:4px 12px; border-color:rgba(188,0,45,.5); background:var(--aka-humo); font-size:12px; }
+.chk-tag{ flex-direction:row; cursor:pointer; } .chk-tag input{ display:none; }
+.chk-tag span{ border:1px solid var(--linea); border-radius:999px; padding:6px 14px; font-size:13px; color:var(--gris); transition:.15s; }
+.chk-tag input:checked + span{ background:var(--aka); border-color:var(--aka); color:#fff; }
+.form-cli{ display:flex; flex-direction:column; gap:18px; }
+.hist li{ cursor:pointer; } .hist li:hover{ background:var(--sumi-3); } .hist small{ color:var(--gris-2); }
+.badge{ font-style:normal; }
+@media (max-width:760px){
+  .tabbar{ grid-template-columns:repeat(5,1fr); } .filtros-cli{ grid-template-columns:1fr; }
+  .reg .c-estado{ text-align:right; }
+}
