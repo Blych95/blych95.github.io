@@ -47,7 +47,7 @@
       <button class="nav-item" data-vista="config" role="tab"><span class="kanji">設定</span> Configuración</button>
     </nav>
 
-    <div class="nav-rates">
+    <div class="nav-rates" id="btnTasas" role="button" tabindex="0" title="Toca para cambiar las tasas">
       <span class="nav-rates-title">Tasas del día</span>
       <div class="nav-rate"><span>Bs</span><b id="navTasaBs">—</b></div>
       <div class="nav-rate"><span>Pesos</span><b id="navTasaPeso">—</b></div>
@@ -65,7 +65,7 @@
           <span class="eyebrow">概要</span>
           <h1>Dashboard</h1>
         </div>
-        <p class="head-note" id="fechaHoy"></p>
+        <div class="head-der"><p class="head-note" id="fechaHoy"></p><button class="campana" id="btnCampana" aria-label="Notificaciones"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17V11a6 6 0 1 1 12 0v6l1.5 2h-15zM10 21a2 2 0 0 0 4 0"/></svg><span class="cnt" id="cntNotif" hidden>0</span></button></div>
       </header>
 
       <div class="stat-row">
@@ -100,16 +100,16 @@
         <article class="card">
           <span class="card-title">Estado de los registros</span>
           <div class="estado-split">
-            <div class="estado-box pagado">
+            <button type="button" class="estado-box pagado" data-ir="pagado">
               <b id="kpiPagados">0</b>
               <span>Pagados</span>
               <small id="kpiPagadosMonto">$0,00</small>
-            </div>
-            <div class="estado-box apartado">
+            </button>
+            <button type="button" class="estado-box apartado" data-ir="apartado">
               <b id="kpiApartados">0</b>
               <span>Apartados</span>
               <small id="kpiApartadosMonto">$0,00</small>
-            </div>
+            </button>
           </div>
           <div class="mini-rows">
             <div class="mini-row"><span>Abonado en apartados</span><b id="kpiAbonado">$0,00</b></div>
@@ -166,7 +166,7 @@
         </div>
 
         <div class="filtros-grid">
-          <label>Nombre del cliente <input type="text" id="fNombre" placeholder="Buscar cliente…"></label>
+          <label>Cliente (nombre o IDC) <input type="text" id="fNombre" list="dlClientes" placeholder="Escribe o elige: Ana Pérez IDC00001"></label>
           <label>Figura <input type="text" id="fFigura" placeholder="Buscar figura…"></label>
           <label>Estado
             <select id="fEstado">
@@ -176,6 +176,7 @@
             </select>
           </label>
           <label>Método de pago <select id="fMetodo"></select></label>
+          <label>Vendedor <select id="fVendedor"></select></label>
           <label>Precio desde <input type="number" id="fPrecioMin" min="0" step="0.01" placeholder="$ mín."></label>
           <label>Precio hasta <input type="number" id="fPrecioMax" min="0" step="0.01" placeholder="$ máx."></label>
         </div>
@@ -219,7 +220,7 @@
           <label>Fecha <input type="date" id="rFecha" required>
             <small class="hint" id="rFechaHint">—</small>
           </label>
-          <label>Nombre del cliente <input type="text" id="rNombre" list="dlClientes" required placeholder="Ej. Ana Pérez"><small class="hint" id="rNombreHint"></small></label>
+          <div class="campo"><span class="campo-label">Cliente</span><div class="fila-cli"><select id="rCliente" required></select><button type="button" class="btn btn-linea" id="btnNuevoCli">+ Nuevo</button></div></div>
           <label>Figura <input type="text" id="rFigura" required placeholder="Ej. Nendoroid Gojo Satoru"></label>
           <label>Método de pago <select id="rMetodo" required></select></label>
           <label>Precio en dólares <input type="number" id="rPrecio" min="0" step="0.01" required placeholder="0.00"></label>
@@ -232,8 +233,8 @@
           </div>
         </div>
 
+        <div class="form-grid" style="margin-top:16px"><label>Vendedor <span class="opcional">opcional</span><select id="rVendedor"></select></label></div>
         <div id="camposExtra" class="form-grid"></div>
-        <label class="chk" id="wrapAddCliente" hidden><input type="checkbox" id="rAddCliente"> Añadir también a Clientes</label>
         <datalist id="dlClientes"></datalist>
 
         <div class="abono-inicial" id="abonoInicial" hidden>
@@ -256,6 +257,16 @@
           <button type="button" class="btn btn-ghost" id="btnVaciar">Vaciar campos</button>
         </div>
       </form>
+    </section>
+
+    <!-- ---------- NOTIFICACIONES ---------- -->
+    <section class="vista" id="vista-notif">
+      <header class="head head-notif">
+        <button class="volver" id="btnVolverNotif" aria-label="Volver a inicio"><svg viewBox="0 0 20 20" aria-hidden="true"><polyline points="12,4 6,10 12,16"/></svg></button>
+        <div><span class="eyebrow">通知</span><h1>Notificaciones</h1></div>
+        <p class="head-note" id="fechaNotif"></p>
+      </header>
+      <div id="listaNotif" class="lista"></div>
     </section>
 
     <!-- ---------- CLIENTES ---------- -->
@@ -320,6 +331,13 @@
           <label id="wrapOpciones" hidden>Opciones separadas por coma <input type="text" id="cCampoOpciones" placeholder="Ej. 1/7, 1/8, Nendoroid"></label>
           <button class="btn btn-linea" type="submit">Añadir campo</button>
         </form>
+      </article>
+
+      <article class="card">
+        <span class="card-title">Vendedores</span>
+        <p class="card-desc">Personal que vende. Cada vendedor recibe un ID (IDE001, IDE002…) y se puede asignar a un registro y filtrar en la búsqueda.</p>
+        <div id="listaVendedores" class="campos-lista"></div>
+        <button class="btn btn-linea" id="btnNuevoVendedor" type="button">+ Añadir vendedor</button>
       </article>
 
       <article class="card">
