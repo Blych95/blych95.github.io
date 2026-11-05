@@ -31,7 +31,7 @@ const ExcelLite = (() => {
     const ref = col(i) + (r + 1), si = KEYS.indexOf(s);
     if(FECHAS.includes(s) && typeof v === 'string' && v) v = ser(v);
     if(v === '' || v == null) return `<c r="${ref}" s="${si}"/>`;
-    if(typeof v === 'number') return `<c r="${ref}" s="${si}">${f ? `<f>${x(f)}</f>` : ''}<v>${v}</v></c>`;
+    if(f || typeof v === 'number') return `<c r="${ref}" s="${si}">${f ? `<f>${x(f)}</f>` : ''}<v>${Number(v) || 0}</v></c>`;
     return `<c r="${ref}" s="${si}" t="inlineStr"><is><t xml:space="preserve">${x(v)}</t></is></c>`;
   };
 
@@ -41,7 +41,9 @@ const ExcelLite = (() => {
 <sheetViews><sheetView workbookViewId="0" showGridLines="0">${sh.congelar ? `<pane ySplit="${sh.congelar}" topLeftCell="A${sh.congelar + 1}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/>` : ''}</sheetView></sheetViews>
 <sheetFormatPr defaultRowHeight="15"/><cols>${sh.anchos.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>
 <sheetData>${filas.map((r, ri) => `<row r="${ri + 1}"${ri === sh.congelar - 1 ? ' ht="30" customHeight="1"' : ri === 0 ? ' ht="26" customHeight="1"' : ''}>${r.map((c, i) => celda(c, ri, i)).join('')}</row>`).join('')}</sheetData>
-${sh.filtro ? `<autoFilter ref="${sh.filtro}"/>` : ''}<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+${sh.filtro ? `<autoFilter ref="${sh.filtro}"/>` : ''}
+${sh.validations && sh.validations.length ? `<dataValidations count="${sh.validations.length}">${sh.validations.map(v => `<dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="${v.sqref}"><formula1>&quot;${v.lista}&quot;</formula1></dataValidation>`).join('')}</dataValidations>` : ''}
+<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
   };
 
   const zip = files => {
@@ -80,26 +82,181 @@ ${sh.filtro ? `<autoFilter ref="${sh.filtro}"/>` : ''}<pageMargins left="0.5" ri
   return { build, col };
 })();
 
-/* ---------- construcción de la hoja de registros (compartida por ambas exportaciones) ---------- */
+/* ---------- construcción del Dashboard ---------- */
+function hojaDashboard() {
+  const hoy = new Date();
+  const yr = hoy.getFullYear();
+  const mo = hoy.getMonth() + 1;
+
+  const filas = [
+    [['DASHBOARD DE INGRESOS', 'tit']],
+    [],
+    [['Año (edítalo):', 'lbl'], [yr, 'txt']],
+    [['Mes (edítalo):', 'lbl'], [mo, 'txt']],
+    [],
+    [
+      '', '',
+      ['Resumen Mensual', 'enc'], ['Ingresos', 'enc'],
+      '',
+      ['Día', 'enc'], ['Fecha', 'enc'], ['Ingresos', 'enc'],
+      '',
+      ['Semana', 'enc'], ['Ingresos', 'enc']
+    ]
+  ];
+
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  for (let i = 1; i <= 31; i++) {
+    const row = ['', ''];
+    
+    // Mensual
+    if (i <= 12) {
+      row.push([meses[i-1], 'txt']);
+      row.push([0, 'usd', `SUMIFS(Registros!G:G, Registros!A:A, ">="&DATE($B$3,${i},1), Registros!A:A, "<="&EOMONTH(DATE($B$3,${i},1),0))`]);
+    } else if (i === 13) {
+      row.push(['TOTAL', 'lbl']);
+      row.push([0, 'usd', `SUM(D7:D18)`]);
+    } else {
+      row.push('', '');
+    }
+
+    row.push(''); // E
+
+    // Diario
+    row.push([i, 'txt']);
+    row.push([0, 'fec', `IF(MONTH(DATE($B$3,$B$4,${i}))=$B$4, DATE($B$3,$B$4,${i}), "")`]);
+    row.push([0, 'usd', `IF(G${i+6}="","",SUMIFS(Registros!G:G, Registros!A:A, G${i+6}))`]);
+
+    row.push(''); // I
+
+    // Semanal
+    if (i <= 5) {
+      const start = (i - 1) * 7 + 1;
+      const end = i === 5 ? 31 : i * 7;
+      let wFormula = '';
+      if (i === 1) wFormula = `SUMIFS(Registros!G:G, Registros!A:A, ">="&DATE($B$3,$B$4,1), Registros!A:A, "<="&DATE($B$3,$B$4,7))`;
+      if (i === 2) wFormula = `SUMIFS(Registros!G:G, Registros!A:A, ">="&DATE($B$3,$B$4,8), Registros!A:A, "<="&DATE($B$3,$B$4,14))`;
+      if (i === 3) wFormula = `SUMIFS(Registros!G:G, Registros!A:A, ">="&DATE($B$3,$B$4,15), Registros!A:A, "<="&DATE($B$3,$B$4,21))`;
+      if (i === 4) wFormula = `SUMIFS(Registros!G:G, Registros!A:A, ">="&DATE($B$3,$B$4,22), Registros!A:A, "<="&DATE($B$3,$B$4,28))`;
+      if (i === 5) wFormula = `SUMIFS(Registros!G:G, Registros!A:A, ">="&DATE($B$3,$B$4,29), Registros!A:A, "<="&EOMONTH(DATE($B$3,$B$4,1),0))`;
+      
+      row.push([`Semana ${i} (${start}-${end})`, 'txt']);
+      row.push([0, 'usd', wFormula]);
+    } else if (i === 6) {
+      row.push(['TOTAL', 'lbl']);
+      row.push([0, 'usd', `SUM(K7:K11)`]);
+    } else {
+      row.push('', '');
+    }
+
+    filas.push(row);
+  }
+
+  return {
+    nombre: 'Dashboard',
+    filas,
+    anchos: [5, 12, 18, 16, 5, 10, 15, 16, 5, 20, 16]
+  };
+}
+
+/* ---------- construcción de la hoja de registros ---------- */
 function hojaRegistros(nombre, bloque, rs, conPago){
-  const cp = estado.config.campos, tb = +estado.config.tasaBs || 0, tp = +estado.config.tasaPeso || 0, hoy = hoyISO();
-  const cab = [conPago ? 'Fecha de registro / apartado' : 'Fecha', ...(conPago ? [] : ['Cliente']), 'Figura', 'Método de pago', 'Precio USD', 'Precio Bs', 'Precio COP',
-    'Estado', 'Fecha límite de pago', ...(conPago ? ['Fecha de pago'] : []), 'Abonado USD', 'Por pagar USD', ...cp.map(c => c.etiqueta)];
-  const filas = [...bloque, [], cab.map(t => [t, 'enc'])];
-  const hr = filas.length;                                   // fila (1-based) del encabezado
+  const hoy = hoyISO();
+  
+  // Aplanamos los registros considerando todos los abonos independientes por fecha
+  const operaciones = [];
   rs.forEach(r => {
-    const p = +r.precio || 0, lim = limiteDe(r), pag = r.estado === 'pagado';
-    filas.push([[r.fecha, 'fec'], ...(conPago ? [] : [[r.nombre, 'txt']]), [r.figura, 'txt'], [r.metodo || '', 'txt'], [p, 'usd'], [p * tb, 'bs'], [p * tp, 'cop'],
-      [pag ? 'Pagado' : 'Apartado', pag ? 'ok' : 'ap'], [lim || '', !pag && lim < hoy ? 'ven' : 'fec'],
-      ...(conPago ? [[pag ? (r.fechaPago || r.fecha) : '', 'fec']] : []), [abonado(r), 'usd'], [restante(r), 'usd'], ...cp.map(c => [(r.extra || {})[c.id] ?? '', 'txt'])]);
+    if(r.abonos && r.abonos.length > 0) {
+      const abonos = [...r.abonos].sort((a,b) => a.fecha.localeCompare(b.fecha));
+      let deuda = Number(r.precio) || 0;
+      abonos.forEach((ab, idx) => {
+        let pagado = Number(ab.monto) || 0;
+        let restante = Math.max(0, deuda - pagado);
+        operaciones.push({
+          fecha: ab.fecha, cliente: r.nombre, figura: r.figura,
+          operacion: (idx === 0 && r.fecha === ab.fecha) ? 'Apartado' : 'Abono',
+          precio: r.precio, metodo: r.metodo, monto: pagado, deudaAnt: deuda, restante: restante,
+          estado: restante <= 0 ? 'Pagado' : 'Pendiente', nota: ab.nota || ''
+        });
+        deuda = restante;
+      });
+      // Si se marcó pagado pero el cálculo no da cero
+      if(r.estado === 'pagado' && deuda > 0) {
+        operaciones.push({
+          fecha: r.fechaPago || r.fecha, cliente: r.nombre, figura: r.figura, operacion: 'Liquidación',
+          precio: r.precio, metodo: r.metodo, monto: deuda, deudaAnt: deuda, restante: 0,
+          estado: 'Pagado', nota: 'Marcado manual'
+        });
+      }
+    } else {
+      if (r.estado === 'pagado') {
+         operaciones.push({
+          fecha: r.fechaPago || r.fecha, cliente: r.nombre, figura: r.figura, operacion: 'Venta',
+          precio: r.precio, metodo: r.metodo, monto: r.precio, deudaAnt: r.precio, restante: 0,
+          estado: 'Pagado', nota: ''
+        });
+      } else {
+         operaciones.push({
+          fecha: r.fecha, cliente: r.nombre, figura: r.figura, operacion: 'Apartado',
+          precio: r.precio, metodo: r.metodo, monto: 0, deudaAnt: r.precio, restante: r.precio,
+          estado: 'Pendiente', nota: 'Sin abonos'
+        });
+      }
+    }
   });
-  const n = rs.length, ini = col => `${ExcelLite.col(col)}${hr + 1}:${ExcelLite.col(col)}${hr + n}`;
-  const i0 = conPago ? 3 : 4, suma = (k, f) => [rs.reduce((s, r) => s + f(r), 0), k, `SUBTOTAL(109,${ini(i0 + (k === 'tusd' ? 0 : k === 'tbs' ? 1 : 2))})`];
-  const p = r => +r.precio || 0, resto = cab.length - (i0 + 3);
-  filas.push([['TOTAL', 'tl'], ...Array(i0 - 1).fill(['', 'tl']), suma('tusd', p), suma('tbs', r => p(r) * tb), suma('tcop', r => p(r) * tp),
-    ...Array(resto).fill(['', 'tl'])].map((c, i) => i === 1 && !conPago ? [`${n} registros`, 'tl'] : c));
-  const anchos = [16, ...(conPago ? [] : [24]), 30, 20, 13, 17, 17, 13, 16, ...(conPago ? [16] : []), 13, 13, ...cp.map(() => 18)];
-  return { nombre, filas, anchos, congelar: hr, filtro: `A${hr}:${ExcelLite.col(cab.length - 1)}${hr + n}` };
+
+  const cab = ['Fecha', ...(conPago ? [] : ['Cliente']), 'Figura / Producto', 'Operación', 'Precio Total', 'Método de Pago', 'Monto Pagado', 'Deuda Anterior', 'Restante por Cobrar', 'Estado', 'Notas y Observación'];
+  const filas = [...bloque, [], cab.map(t => [t, 'enc'])];
+  const hr = filas.length; // índice de la cabecera (1-based)
+  
+  operaciones.forEach(o => {
+    filas.push([
+      [o.fecha, 'fec'],
+      ...(conPago ? [] : [[o.cliente, 'txt']]),
+      [o.figura, 'txt'],
+      [o.operacion, 'txt'],
+      [o.precio, 'usd'],
+      [o.metodo, 'txt'],
+      [o.monto, 'usd'],
+      [o.deudaAnt, 'usd'],
+      [o.restante, 'usd'],
+      [o.estado, o.estado === 'Pagado' ? 'ok' : 'ap'],
+      [o.nota, 'txt']
+    ]);
+  });
+
+  // Fila de suma total para el monto pagado
+  const n = operaciones.length;
+  const colMonto = conPago ? 'F' : 'G';
+  filas.push([
+    ['TOTAL', 'tl'],
+    ...Array(conPago ? 4 : 5).fill(['', 'tl']),
+    [0, 'usd', `SUBTOTAL(109,${colMonto}${hr + 1}:${colMonto}${hr + n})`],
+    ...Array(4).fill(['', 'tl'])
+  ]);
+
+  // Validaciones (Listas desplegables)
+  const validations = [];
+  const vOffset = conPago ? -1 : 0;
+  
+  const colOp = ExcelLite.col(3 + vOffset);
+  validations.push({ sqref: `${colOp}${hr+1}:${colOp}1048576`, lista: `Venta,Apartado,Abono,Liquidación` });
+  
+  const colMet = ExcelLite.col(5 + vOffset);
+  const metodosLimitados = estado.config.metodosPago.join(',').substring(0, 200).replace(/"/g, ''); 
+  validations.push({ sqref: `${colMet}${hr+1}:${colMet}1048576`, lista: metodosLimitados });
+  
+  const colEst = ExcelLite.col(9 + vOffset);
+  validations.push({ sqref: `${colEst}${hr+1}:${colEst}1048576`, lista: `Pagado,Pendiente` });
+
+  return {
+    nombre: nombre,
+    filas,
+    anchos: [15, ...(conPago ? [] : [22]), 25, 14, 13, 16, 15, 15, 17, 12, 25],
+    congelar: hr,
+    filtro: `A${hr}:${ExcelLite.col(cab.length - 1)}${hr + n}`,
+    validations
+  };
 }
 
 function bajarXlsx(nombre, hojas){
@@ -113,9 +270,14 @@ function exportarRegistros(){
   const rs = estado.registros.filter(r => (!d || r.fecha >= d) && (!h || r.fecha <= h))
     .sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.creado || '').localeCompare(b.creado || ''));
   if(!rs.length){ aviso('No hay registros en ese rango de fechas.', 'error'); return; }
+  
   const bloque = [[['Registro Torii — Registros', 'tit']],
-    [[`Del ${d ? fmtFecha(d) : fmtFecha(rs[0].fecha)} al ${h ? fmtFecha(h) : fmtFecha(hoyISO())} · Tasa Bs: ${num(estado.config.tasaBs)} · Tasa COP: ${num(estado.config.tasaPeso, 0)} · Plazo de apartados: ${DIAS_LIMITE} días`, 'nota']]];
-  bajarXlsx(`registros-torii_${d || 'inicio'}_a_${h || hoyISO()}.xlsx`, [hojaRegistros('Registros', bloque, rs, false)]);
+    [[`Del ${d ? fmtFecha(d) : fmtFecha(rs[0].fecha)} al ${h ? fmtFecha(h) : fmtFecha(hoyISO())} · Plazo de apartados: ${DIAS_LIMITE} días`, 'nota']]];
+  
+  const shDashboard = hojaDashboard();
+  const shRegistros = hojaRegistros('Registros', bloque, rs, false);
+
+  bajarXlsx(`registros-torii_${d || 'inicio'}_a_${h || hoyISO()}.xlsx`, [shDashboard, shRegistros]);
 }
 
 /* ---------- Excel 2: historial completo de un cliente ---------- */
@@ -125,8 +287,12 @@ function exportarCliente(id){
   const rs = regsDe(c).sort((a, b) => a.fecha.localeCompare(b.fecha));
   if(!rs.length){ aviso('Este cliente aún no tiene registros.', 'error'); return; }
   const lbl = (t, v, s = 'def') => [[t, 'lbl'], [v, s]];
+  
   const bloque = [[['Registro Torii — Historial de cliente', 'tit']],
     lbl('Cliente', `${c.nombre} (${c.idc})`), lbl('Teléfono', c.telefono || '—'), lbl('Cédula', c.cedula || '—'), lbl('Registrado en la app', fechaAlta(c), 'fpl'), lbl('Categorías', c.categorias.join(', ') || '—'), lbl('Primera compra', primeraCompra(c), 'fpl'),
     lbl('Pagadas', rs.filter(r => r.estado === 'pagado').length), lbl('Apartadas', rs.filter(r => r.estado === 'apartado').length)];
-  bajarXlsx(`cliente-${norm(c.nombre).replace(/[^a-z0-9]+/g, '-')}.xlsx`, [hojaRegistros('Historial', bloque, rs, true)]);
+  
+  const shRegistros = hojaRegistros('Historial', bloque, rs, true);
+  
+  bajarXlsx(`cliente-${norm(c.nombre).replace(/[^a-z0-9]+/g, '-')}.xlsx`, [shRegistros]);
 }

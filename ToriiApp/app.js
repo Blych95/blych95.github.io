@@ -398,6 +398,7 @@ function abrirDetalle(id){
       </div>
       ${esApartado ? `
       <form class="form-abono" id="formAbono">
+        <label>Fecha <input type="date" id="aFecha" required value="${hoyISO()}"></label>
         <label>Monto en dólares <input type="number" id="aMonto" min="0.01" step="0.01" required placeholder="0.00"></label>
         <label>Nota <input type="text" id="aNota" placeholder="opcional"></label>
         <button class="btn btn-linea" type="submit">Añadir abono</button>
@@ -450,7 +451,7 @@ function abrirDetalle(id){
     const monto = Number($('#aMonto').value);
     if(!(monto > 0)) return;
     r.abonos = r.abonos || [];
-    r.abonos.push({ id: uid(), fecha: hoyISO(), monto, nota: $('#aNota').value.trim() });
+    r.abonos.push({ id: uid(), fecha: $('#aFecha').value, monto, nota: $('#aNota').value.trim() });
     if(abonado(r) >= (Number(r.precio) || 0)){
       r.estado = 'pagado'; r.fechaPago = hoyISO();
       aviso('Apartado completado. El registro pasó a Pagado.');
