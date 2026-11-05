@@ -576,7 +576,7 @@ select{ cursor:pointer; }
 .main{ overflow-x:clip; }
 input,select,button{ max-width:100%; }
 input[type="date"],input[type="tel"]{ min-width:0; -webkit-appearance:none; appearance:none; }
-.tabbar{ position:fixed !important; left:0; right:0; bottom:0; transform:translateZ(0); -webkit-transform:translateZ(0); will-change:transform; z-index:80; }
+.tabbar{ position:fixed !important; left:0; right:0; bottom:0; z-index:80; }
 .head-der{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
 .campana{ position:relative; background:var(--sumi-2); border:1px solid var(--linea); border-radius:50%; width:42px; height:42px; display:grid; place-items:center; cursor:pointer; transition:.15s; }
 .campana:hover{ border-color:var(--aka); }
@@ -633,17 +633,38 @@ body{ max-width:100%; }
 .combo-op mark{ background:var(--aka-humo); color:var(--kinari); border-radius:2px; padding:0 1px; }
 .combo-vacio,.combo-mas{ padding:10px 11px; font-size:13px; color:var(--gris); cursor:default; }
 
-/* ---------- Ventanas flotantes a pantalla completa en móvil, sobre la barra inferior ---------- */
-body.hay-modal .tabbar,body.hay-modal .tasa-chip{ display:none !important; }
-.modal-caja{ overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
-@media (max-width:760px){
-  .modal{ padding:0 !important; align-items:stretch !important; justify-content:stretch !important;
-    width:100vw; height:100vh; height:100dvh; }
-  .modal-caja{ width:100% !important; max-width:none !important; height:100% !important; max-height:none !important;
-    margin:0 !important; border-radius:0 !important; border-left:0; border-right:0; border-bottom:0;
-    padding:22px 18px calc(28px + env(safe-area-inset-bottom)) !important;
-    padding-top:calc(22px + env(safe-area-inset-top)) !important; }
-  .modal-x{ top:calc(14px + env(safe-area-inset-top)); right:14px; font-size:18px; padding:10px; z-index:2; }
+/* ---------- Ventanas flotantes centradas y por encima de todo ---------- */
+body.hay-modal .tabbar, body.hay-modal .tasa-chip { display: none !important; }
+.modal-caja { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 760px) {
+  .modal {
+    padding: 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 2147483647 !important; /* Capa superior máxima */
+  }
+  .modal-caja {
+    width: 100% !important;
+    max-width: 500px !important;
+    height: auto !important;
+    max-height: calc(100dvh - 32px) !important;
+    margin: auto !important;
+    border-radius: var(--r) !important;
+    border: 1px solid var(--linea) !important;
+    border-top: 3px solid var(--aka) !important;
+    padding: 24px 20px !important;
+  }
+  .modal-x {
+    top: 14px !important;
+    right: 14px !important;
+    font-size: 16px !important;
+    padding: 6px !important;
+    z-index: 2147483647 !important;
+  }
 }
 @media (min-width:761px){
   .modal-caja{ max-height:calc(100dvh - 48px); padding-bottom:30px; }
