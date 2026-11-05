@@ -15,7 +15,7 @@ const CONFIG_BASE = {
   categoriasCliente: ['Estrella', 'Nuevo', 'Frecuente']
 };
 
-let estado = { registros: [], clientes: [], config: clonar(CONFIG_BASE) };
+let estado = { registros: [], clientes: [], vendedores: [], config: clonar(CONFIG_BASE) };
 let editandoId = null;
 let detalleId = null;
 
@@ -36,6 +36,7 @@ function cargar(){
     const data = JSON.parse(crudo);
     estado.registros = Array.isArray(data.registros) ? data.registros : [];
     estado.clientes = Array.isArray(data.clientes) ? data.clientes : [];
+    estado.vendedores = Array.isArray(data.vendedores) ? data.vendedores : [];
     estado.config = Object.assign(clonar(CONFIG_BASE), data.config || {});
     if(!Array.isArray(estado.config.metodosPago)) estado.config.metodosPago = clonar(CONFIG_BASE.metodosPago);
     if(!Array.isArray(estado.config.campos)) estado.config.campos = [];
@@ -132,8 +133,8 @@ function aviso(texto, tipo = 'ok', accion = null){
   }
 
   cont.appendChild(t);
-  if(!accion){
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+  if(!accion || accion.auto){
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, accion ? 9000 : 3200);
   }
 }
 
@@ -142,12 +143,14 @@ function aviso(texto, tipo = 'ok', accion = null){
    ========================================================== */
 function irA(vista){
   $$('.vista').forEach(v => v.classList.toggle('is-active', v.id === 'vista-' + vista));
-  $$('.nav-item, .tab').forEach(b => b.classList.toggle('is-active', b.dataset.vista === vista));
+  $$('.nav-item, .tab').forEach(b => b.classList.toggle('is-active', b.dataset.vista === (vista === 'notif' ? 'dashboard' : vista)));
   window.scrollTo(0, 0);
   if(vista === 'dashboard') pintarDashboard();
   if(vista === 'lista') pintarLista();
   if(vista === 'config') pintarConfig();
   if(vista === 'clientes') pintarClientes();
+  if(vista === 'notif') pintarNotif();
+  if(vista === 'registro') recordarTasa();
 }
 $$('.nav-item, .tab').forEach(b => b.addEventListener('click', () => irA(b.dataset.vista)));
 
@@ -184,6 +187,7 @@ function pintarDashboard(){
   $('#kpiPorCobrar').textContent      = usd(porCobrar);
 
   $('#fechaHoy').textContent = fmtLargo(hoy).replace(/^\w/, c => c.toUpperCase());
+  pintarCampana();
 
   // gráfico de los últimos 7 días
   const dias = [];
@@ -217,6 +221,8 @@ function pintarDashboard(){
 
 function pintarTasasNav(){
   const c = estado.config;
+  $('#chipBs').textContent = c.tasaBs > 0 ? num(c.tasaBs) : '—';
+  $('#chipPeso').textContent = c.tasaPeso > 0 ? num(c.tasaPeso, 0) : '—';
   $('#navTasaBs').textContent   = c.tasaBs > 0 ? num(c.tasaBs) : '—';
   $('#navTasaPeso').textContent = c.tasaPeso > 0 ? num(c.tasaPeso, 0) : '—';
   $('#navTasaFecha').textContent = c.tasasFecha
@@ -248,7 +254,7 @@ $('#btnFiltros').addEventListener('click', () => {
 
 function contarFiltros(){
   let n = rangoActivo === 'todo' ? 0 : 1;
-  ['#fNombre','#fFigura','#fPrecioMin','#fPrecioMax','#fEstado','#fMetodo'].forEach(s => {
+  ['#fNombre','#fFigura','#fPrecioMin','#fPrecioMax','#fEstado','#fMetodo','#fVendedor'].forEach(s => {
     if($(s).value.trim() !== '') n++;
   });
   estado.config.campos.forEach(c => {
@@ -273,12 +279,12 @@ $$('#chipsFecha .chip').forEach(c => c.addEventListener('click', () => {
 
 ['#fNombre','#fFigura','#fPrecioMin','#fPrecioMax','#fDesde','#fHasta'].forEach(s =>
   $(s).addEventListener('input', pintarLista));
-['#fEstado','#fMetodo','#fOrden'].forEach(s =>
+['#fEstado','#fMetodo','#fVendedor','#fOrden'].forEach(s =>
   $(s).addEventListener('change', pintarLista));
 
 $('#btnLimpiar').addEventListener('click', () => {
   ['#fNombre','#fFigura','#fPrecioMin','#fPrecioMax','#fDesde','#fHasta'].forEach(s => $(s).value = '');
-  $('#fEstado').value = ''; $('#fMetodo').value = ''; $('#fOrden').value = 'fecha-desc';
+  $('#fEstado').value = ''; $('#fMetodo').value = ''; $('#fVendedor').value = ''; $('#fOrden').value = 'fecha-desc';
   $$('#filtrosExtra input, #filtrosExtra select').forEach(i => i.value = '');
   rangoActivo = 'todo';
   $$('#chipsFecha .chip').forEach(x => x.classList.toggle('is-active', x.dataset.rango === 'todo'));
@@ -300,6 +306,7 @@ function filtrar(){
   const nombre = $('#fNombre').value.trim().toLowerCase();
   const figura = $('#fFigura').value.trim().toLowerCase();
   const est    = $('#fEstado').value;
+  const vend   = $('#fVendedor').value;
   const met    = $('#fMetodo').value;
   const pMin   = $('#fPrecioMin').value === '' ? null : Number($('#fPrecioMin').value);
   const pMax   = $('#fPrecioMax').value === '' ? null : Number($('#fPrecioMax').value);
@@ -311,7 +318,8 @@ function filtrar(){
   let res = estado.registros.filter(r => {
     if(desde && (r.fecha || '') < desde) return false;
     if(hasta && (r.fecha || '') > hasta) return false;
-    if(nombre && !(r.nombre || '').toLowerCase().includes(nombre)) return false;
+    if(nombre && !coincideCliente(r, $('#fNombre').value.trim())) return false;
+    if(vend && r.vendedorId !== vend) return false;
     if(figura && !(r.figura || '').toLowerCase().includes(figura)) return false;
     if(est && r.estado !== est) return false;
     if(met && r.metodo !== met) return false;
@@ -461,6 +469,7 @@ function abrirDetalle(id){
 }
 
 function cerrarModal(){
+  if(alCerrarModal){ const f = alCerrarModal; alCerrarModal = null; f(); }   // p. ej. guardar la tasa al cerrar
   $('#modal').hidden = true;
   document.body.style.overflow = '';
   detalleId = null;
@@ -554,6 +563,7 @@ function pintarFiltrosExtra(){
 
 $('#formRegistro').addEventListener('submit', e => {
   e.preventDefault();
+  if(!$('#rCliente').value){ aviso('Elige un cliente o créalo con “+ Nuevo”.', 'error'); return; }
   const precio = Number($('#rPrecio').value);
   if(!($('#rMetodo').value)){ aviso('Elige un método de pago.', 'error'); return; }
   if(!(precio >= 0)){ aviso('El precio no es válido.', 'error'); return; }
@@ -566,7 +576,8 @@ $('#formRegistro').addEventListener('submit', e => {
 
   const base = {
     fecha:  $('#rFecha').value,
-    nombre: $('#rNombre').value.trim(),
+    nombre: '',
+    vendedorId: $('#rVendedor').value || undefined,
     figura: $('#rFigura').value.trim(),
     metodo: $('#rMetodo').value,
     precio,
@@ -621,7 +632,7 @@ function editarRegistro(id){
   $('#btnCancelarEdicion').hidden = false;
   $('#rFecha').value = r.fecha;
   $('#rFechaHint').textContent = fmtFecha(r.fecha);
-  $('#rNombre').value = r.nombre;
+  $('#rCliente').value = r.clienteId || ''; $('#rVendedor').value = r.vendedorId || '';
   $('#rFigura').value = r.figura;
   pintarMetodos();
   if(r.metodo && !estado.config.metodosPago.includes(r.metodo)){
@@ -787,6 +798,7 @@ $('#inputImportar').addEventListener('change', e => {
       if(!confirm(`El respaldo trae ${data.registros.length} registros y reemplazará todo lo que hay ahora. ¿Continuar?`)) return;
       estado.registros = data.registros;
       estado.clientes = Array.isArray(data.clientes) ? data.clientes : [];
+      estado.vendedores = Array.isArray(data.vendedores) ? data.vendedores : [];
       estado.config = Object.assign(clonar(CONFIG_BASE), data.config || {});
       migrar(); guardar(); iniciarUI();
       aviso('Respaldo importado.');
@@ -801,7 +813,7 @@ $('#inputImportar').addEventListener('change', e => {
 $('#btnBorrarTodo').addEventListener('click', () => {
   if(!confirm('Esto borra todos los registros y la configuración de este navegador. ¿Seguro?')) return;
   if(!confirm('Última confirmación: se perderá todo si no tienes respaldo. ¿Borrar?')) return;
-  estado = { registros: [], clientes: [], config: clonar(CONFIG_BASE) };
+  estado = { registros: [], clientes: [], vendedores: [], config: clonar(CONFIG_BASE) };
   guardar(); iniciarUI();
   aviso('Todos los datos fueron borrados.', 'info');
 });

@@ -31,6 +31,7 @@
 
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; }
+html{ overflow-x:hidden; }
 [hidden]{ display:none !important; }
 
 body{
@@ -568,4 +569,48 @@ select{ cursor:pointer; }
 @media (max-width:760px){
   .tabbar{ grid-template-columns:repeat(5,1fr); } .filtros-cli{ grid-template-columns:1fr; }
   .reg .c-estado{ text-align:right; }
+}
+
+/* ---------- Ajustes de esta versión ---------- */
+.main,.vista,.card,.form-grid>*,.form-cli>*,label,.campo{ min-width:0; max-width:100%; }
+.main{ overflow-x:clip; }
+input,select,button{ max-width:100%; }
+input[type="date"],input[type="tel"]{ min-width:0; -webkit-appearance:none; appearance:none; }
+.tabbar{ position:fixed !important; left:0; right:0; bottom:0; transform:translateZ(0); -webkit-transform:translateZ(0); will-change:transform; z-index:80; }
+.head-der{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.campana{ position:relative; background:var(--sumi-2); border:1px solid var(--linea); border-radius:50%; width:42px; height:42px; display:grid; place-items:center; cursor:pointer; transition:.15s; }
+.campana:hover{ border-color:var(--aka); }
+.campana svg{ width:20px; height:20px; fill:none; stroke:var(--kinari); stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.campana.urgente svg{ stroke:var(--aka-vivo); }
+.cnt{ position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px; border-radius:999px; background:var(--aka); color:#fff; font:700 11px/18px var(--mono); text-align:center; }
+.head-notif{ justify-content:flex-start; align-items:center; gap:14px; }
+.head-notif .head-note{ margin-left:auto; text-align:right; }
+.volver{ background:var(--sumi-2); border:1px solid var(--linea); border-radius:50%; width:40px; height:40px; display:grid; place-items:center; cursor:pointer; flex:none; }
+.volver:hover{ border-color:var(--aka); }
+.volver svg{ width:18px; height:18px; fill:none; stroke:var(--kinari); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.notif{ text-align:left; width:100%; display:flex; flex-direction:column; gap:3px; border-radius:var(--r-s); padding:14px 16px; cursor:pointer; border:1px solid; color:var(--kinari); }
+.notif.amarillo{ background:rgba(240,200,40,.12); border-color:rgba(240,200,40,.6); border-left:4px solid #F0C828; }
+.notif.rojo{ background:rgba(228,22,43,.14); border-color:rgba(228,22,43,.6); border-left:4px solid var(--aka-vivo); }
+.notif-tag{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+.notif.amarillo .notif-tag{ color:#F0C828; } .notif.rojo .notif-tag{ color:var(--aka-vivo); }
+.notif small{ color:var(--gris); font-family:var(--mono); }
+button.estado-box{ background:none; color:inherit; font:inherit; cursor:pointer; transition:.15s; }
+button.estado-box:hover{ background:var(--sumi-3); transform:translateY(-2px); }
+.nav-rates{ cursor:pointer; border-radius:var(--r-s); transition:background .15s; }
+.nav-rates:hover{ background:#141418; }
+.fila-cli{ display:flex; gap:8px; } .fila-cli select{ flex:1; min-width:0; } .fila-cli .btn{ padding:9px 14px; }
+.idc{ font-family:var(--mono); font-size:12px; color:var(--aka-vivo); border:1px solid rgba(188,0,45,.5); border-radius:4px; padding:2px 7px; vertical-align:middle; font-weight:400; }
+.m-dato.tel{ grid-column:1 / -1; } .tel-btns{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.tel-btns .btn{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.ico{ width:16px; height:16px; fill:currentColor; flex:none; }
+
+/* ---------- Ajuste al ancho del dispositivo + indicador de tasa (escritorio) ---------- */
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body{ max-width:100%; }
+.tasa-chip{ position:fixed; top:12px; right:18px; z-index:40; background:var(--sumi-2); border:1px solid var(--linea); border-radius:999px; padding:6px 14px; color:var(--gris); font:12px var(--mono); cursor:pointer; transition:.15s; }
+.tasa-chip b{ color:var(--kinari); font-weight:400; } .tasa-chip:hover{ border-color:var(--aka); }
+@media (max-width:760px){
+  .app{ grid-template-columns:minmax(0,1fr); }
+  .tasa-chip{ display:none; }
+  input,select,textarea{ font-size:16px; }
 }
