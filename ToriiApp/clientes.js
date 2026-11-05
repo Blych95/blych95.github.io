@@ -163,7 +163,12 @@ function formCliente(id, alGuardar){
       <div class="form-grid">
         <label>Cédula de identidad <span class="opcional">opcional</span><input type="text" id="kCedula" value="${esc(c.cedula || '')}" placeholder="Ej. V-12345678"></label>
         <label>Teléfono <span class="opcional">opcional</span><input type="tel" id="kTelefono" value="${esc(c.telefono || '')}" placeholder="Ej. +58 412 1234567"></label>
-        <label>ID del cliente (IDC) <span class="opcional">vacío = automático</span><input type="text" id="kIdc" value="${esc(c.idc || '')}" placeholder="Ej. IDC00015"></label>
+        <label>ID del cliente (IDC) <span class="opcional">vacío = automático</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <b style="font-family:var(--mono); color:var(--gris-2); font-size:14px; padding-left:4px;">IDC</b>
+            <input type="number" id="kIdcNum" min="1" max="99999" value="${c.idc ? Number(soloDig(c.idc)) : ''}" placeholder="Ej. 15" style="flex:1;">
+          </div>
+        </label>
       </div>
       <div class="campo"><span class="campo-label">Categoría (puedes marcar varias)</span>
         <div class="tags">${estado.config.categoriasCliente.map(t => `<label class="chk-tag"><input type="checkbox" value="${esc(t)}" ${c.categorias.includes(t) ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('') || '<small class="hint">Añade categorías en Configuración.</small>'}</div></div>
@@ -179,9 +184,11 @@ function formCliente(id, alGuardar){
     const nombre = $('#kNombre').value.trim().replace(/\s+/g, ' ');
     const cats = $$('#formCliente input[type=checkbox]:checked').map(i => i.value);
     
-    let finalIdc = $('#kIdc').value.trim().toUpperCase();
-    if(finalIdc){
-      if(estado.clientes.some(x => x.idc.toUpperCase() === finalIdc && x.id !== id)){
+    let finalIdc = '';
+    const inputIdc = $('#kIdcNum').value.trim();
+    if(inputIdc){
+      finalIdc = 'IDC' + inputIdc.padStart(5, '0');
+      if(estado.clientes.some(x => x.idc === finalIdc && x.id !== id)){
         aviso('Ese IDC ya está ocupado por otro cliente.', 'error');
         return;
       }
