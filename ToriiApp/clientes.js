@@ -162,12 +162,12 @@ function formCliente(id, alGuardar){
       <label>Nombre completo <input type="text" id="kNombre" required value="${esc(c.nombre)}" placeholder="Ej. Ana María Pérez"></label>
       <div class="form-grid">
         <label>Cédula de identidad <span class="opcional">opcional</span><input type="text" id="kCedula" value="${esc(c.cedula || '')}" placeholder="Ej. V-12345678"></label>
-        <label>Teléfono <span class="opcional">opcional · con código de país</span><input type="tel" id="kTelefono" value="${esc(c.telefono || '')}" placeholder="Ej. +58 412 1234567"></label>
+        <label>Teléfono <span class="opcional">opcional</span><input type="tel" id="kTelefono" value="${esc(c.telefono || '')}" placeholder="Ej. +58 412 1234567"></label>
+        <label>ID del cliente (IDC) <span class="opcional">vacío = automático</span><input type="text" id="kIdc" value="${esc(c.idc || '')}" placeholder="Ej. IDC00015"></label>
       </div>
       <div class="campo"><span class="campo-label">Categoría (puedes marcar varias)</span>
         <div class="tags">${estado.config.categoriasCliente.map(t => `<label class="chk-tag"><input type="checkbox" value="${esc(t)}" ${c.categorias.includes(t) ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('') || '<small class="hint">Añade categorías en Configuración.</small>'}</div></div>
       <div class="m-datos">
-        <div class="m-dato"><span>ID del cliente</span><b>${id ? esc(c.idc) : 'Se genera al guardar'}</b></div>
         <div class="m-dato"><span>Primera compra (automática)</span><b>${pf ? fmtFecha(pf) : 'Al registrar su primera figura'}</b></div>
       </div>
       <div class="m-acciones"><button class="btn btn-rojo" type="submit">Guardar cliente</button><button class="btn btn-ghost" type="button" id="kCancelar">Cancelar</button></div>
@@ -178,10 +178,21 @@ function formCliente(id, alGuardar){
     e.preventDefault();
     const nombre = $('#kNombre').value.trim().replace(/\s+/g, ' ');
     const cats = $$('#formCliente input[type=checkbox]:checked').map(i => i.value);
-    const datos = { nombre, cedula: $('#kCedula').value.trim(), telefono: $('#kTelefono').value.trim(), categorias: cats };
+    
+    let finalIdc = $('#kIdc').value.trim().toUpperCase();
+    if(finalIdc){
+      if(estado.clientes.some(x => x.idc.toUpperCase() === finalIdc && x.id !== id)){
+        aviso('Ese IDC ya está ocupado por otro cliente.', 'error');
+        return;
+      }
+    } else {
+      finalIdc = id ? c.idc : nuevoIdc();
+    }
+    
+    const datos = { nombre, cedula: $('#kCedula').value.trim(), telefono: $('#kTelefono').value.trim(), categorias: cats, idc: finalIdc };
     let k = c;
     if(id){ estado.registros.forEach(r => { if(r.clienteId === id) r.nombre = nombre; }); Object.assign(c, datos); }
-    else { k = Object.assign({ id: uid(), idc: nuevoIdc(), creado: new Date().toISOString() }, datos); estado.clientes.push(k); }
+    else { k = Object.assign({ id: uid(), creado: new Date().toISOString() }, datos); estado.clientes.push(k); }
     guardar(); pintarClientes(); pintarLista();
     aviso(id ? 'Perfil actualizado.' : `Cliente añadido (${k.idc}).`);
     if(alGuardar){ cerrarModal(); alGuardar(k); } else abrirCliente(k.id);
