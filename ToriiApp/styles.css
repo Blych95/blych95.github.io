@@ -632,3 +632,19 @@ body{ max-width:100%; }
 .combo-op.is-sel{ box-shadow:inset 3px 0 0 var(--aka); }
 .combo-op mark{ background:var(--aka-humo); color:var(--kinari); border-radius:2px; padding:0 1px; }
 .combo-vacio,.combo-mas{ padding:10px 11px; font-size:13px; color:var(--gris); cursor:default; }
+
+/* ---------- Ventanas flotantes a pantalla completa en móvil, sobre la barra inferior ---------- */
+body.hay-modal .tabbar,body.hay-modal .tasa-chip{ display:none !important; }
+.modal-caja{ overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+@media (max-width:760px){
+  .modal{ padding:0 !important; align-items:stretch !important; justify-content:stretch !important;
+    width:100vw; height:100vh; height:100dvh; }
+  .modal-caja{ width:100% !important; max-width:none !important; height:100% !important; max-height:none !important;
+    margin:0 !important; border-radius:0 !important; border-left:0; border-right:0; border-bottom:0;
+    padding:22px 18px calc(28px + env(safe-area-inset-bottom)) !important;
+    padding-top:calc(22px + env(safe-area-inset-top)) !important; }
+  .modal-x{ top:calc(14px + env(safe-area-inset-top)); right:14px; font-size:18px; padding:10px; z-index:2; }
+}
+@media (min-width:761px){
+  .modal-caja{ max-height:calc(100dvh - 48px); padding-bottom:30px; }
+}

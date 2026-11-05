@@ -453,3 +453,13 @@ function iniciarComboCliente(){
   comboCliente = { refrescar: () => { if(document.activeElement !== txt) mostrar(); } };
   mostrar();
 }
+
+
+/* Mientras haya una ventana abierta se oculta la barra inferior (clase hay-modal en <body>). */
+(function vigilarModal(){
+  const m = document.getElementById('modal');
+  if(!m) return;
+  const sync = () => document.body.classList.toggle('hay-modal', !m.hidden);
+  new MutationObserver(sync).observe(m, { attributes: true, attributeFilter: ['hidden'] });
+  sync();
+})();
