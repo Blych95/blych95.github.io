@@ -103,11 +103,12 @@ function pintarClientes(){
   sel.value = estado.config.categoriasCliente.includes(act) ? act : '';
   const orden = [...estado.clientes].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   $('#dlClientes').innerHTML = orden.map(c => `<option value="${esc(etiquetaCliente(c))}">`).join('');
-  [['#rCliente', 'Elige un cliente…'], ['#xCliente', 'Elige un cliente…']].forEach(([id, ph]) => {
+  [['#xCliente', 'Elige un cliente…']].forEach(([id, ph]) => {
     const el = $(id), v = el.value;
     el.innerHTML = `<option value="">${ph}</option>` + orden.map(c => `<option value="${c.id}">${esc(etiquetaCliente(c))}</option>`).join('');
     el.value = estado.clientes.some(c => c.id === v) ? v : '';
   });
+  if(typeof comboCliente !== 'undefined' && comboCliente) comboCliente.refrescar();
 }
 
 /* ---------- ficha e historial ---------- */
@@ -208,6 +209,7 @@ function iniciarClientes(){
     clientesListo = true;
     $('#cBuscar').addEventListener('input', pintarClientes);
     ['#cCategoria', '#cOrden'].forEach(s => $(s).addEventListener('change', pintarClientes));
+    iniciarComboCliente();
     $('#btnNuevoCliente').addEventListener('click', () => formCliente(null));
     $('#btnNuevoCli').addEventListener('click', () => formCliente(null, k => { $('#rCliente').value = k.id; }));
     $('#formCategoria').addEventListener('submit', e => {
@@ -355,4 +357,99 @@ function recordarTasa(){
   if(visto === hoy || estado.config.tasasFecha === hoy) return;
   try { localStorage.setItem(CL, hoy); } catch(e){}
   aviso('Recuerda mantener actualizada la tasa del día.', 'info', { texto: 'Actualizar', fn: abrirTasas, auto: true });
+}
+
+
+/* ==========================================================
+   Cliente con autocompletado (pantalla «Nuevo registro»)
+   - #rClienteTxt: lo que se escribe / se ve
+   - #rCliente (hidden): guarda el id del cliente elegido. Todo el código
+     existente sigue haciendo  $('#rCliente').value = id  y funciona igual.
+   ========================================================== */
+let comboCliente = null;
+function iniciarComboCliente(){
+  const txt = $('#rClienteTxt'), hid = $('#rCliente'), lista = $('#rClienteLista');
+  if(!txt || !hid || !lista || comboCliente) return;
+  const MAX = 40, desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  const crudo = v => desc.set.call(hid, v);                  // cambia el id sin tocar el texto
+  let abierto = false, idx = -1, items = [];
+
+  const elegido = () => estado.clientes.find(k => k.id === hid.value);
+  const mostrar = () => { const k = elegido(); txt.value = k ? etiquetaCliente(k) : ''; };
+
+  // Cuando otro código asigna $('#rCliente').value = id, el texto se actualiza solo.
+  Object.defineProperty(hid, 'value', { get(){ return desc.get.call(this); }, set(v){ desc.set.call(this, v); mostrar(); } });
+
+  function buscar(q){
+    const ts = norm(q).split(' ').filter(Boolean);
+    const base = [...estado.clientes].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    if(!ts.length) return base;
+    const hit = base.filter(k => { const p = norm(`${k.nombre} ${k.idc} ${k.cedula || ''} ${k.telefono || ''}`); return ts.every(t => p.includes(t)); });
+    const q0 = ts.join(' ');                                  // los que empiezan igual van primero
+    return hit.sort((a, b) => (norm(b.nombre).startsWith(q0) - norm(a.nombre).startsWith(q0)) || a.nombre.localeCompare(b.nombre, 'es'));
+  }
+  function resaltar(t, q){
+    const ts = norm(q).split(' ').filter(Boolean);
+    if(!ts.length) return esc(t);
+    // se busca sobre el texto sin tildes (misma longitud) para marcar la coincidencia en el original
+    const plano = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if(plano.length !== t.length) return esc(t);
+    const marca = new Array(t.length).fill(false);
+    ts.forEach(w => { let i = plano.indexOf(w); while(i > -1){ for(let j = i; j < i + w.length; j++) marca[j] = true; i = plano.indexOf(w, i + w.length); } });
+    let out = '', on = false;
+    for(let i = 0; i < t.length; i++){ if(marca[i] !== on){ out += on ? '</mark>' : '<mark>'; on = marca[i]; } out += esc(t[i]); }
+    return out + (on ? '</mark>' : '');
+  }
+  function pintar(){
+    const q = txt.value, todos = buscar(q); items = todos.slice(0, MAX);
+    if(idx >= items.length) idx = items.length - 1;
+    lista.innerHTML = items.length
+      ? items.map((k, i) => `<li class="combo-op${i === idx ? ' is-sel' : ''}" role="option" data-i="${i}" id="rcOp${i}"><span>${resaltar(k.nombre, q)}</span><span class="idc">${esc(k.idc)}</span></li>`).join('')
+        + (todos.length > MAX ? `<li class="combo-mas">Hay ${todos.length - MAX} más… sigue escribiendo para filtrar.</li>` : '')
+      : `<li class="combo-vacio">${estado.clientes.length ? 'Ningún cliente coincide. Usa “+ Nuevo” para crearlo.' : 'Aún no hay clientes. Usa “+ Nuevo” para crear el primero.'}</li>`;
+    const sel = lista.querySelector('.is-sel'); if(sel) sel.scrollIntoView({ block: 'nearest' });
+    if(sel) txt.setAttribute('aria-activedescendant', sel.id); else txt.removeAttribute('aria-activedescendant');
+  }
+  function abrir(){ abierto = true; lista.hidden = false; txt.setAttribute('aria-expanded', 'true'); pintar(); }
+  function cerrar(){ abierto = false; lista.hidden = true; idx = -1; txt.setAttribute('aria-expanded', 'false'); }
+  function elegir(k){ hid.value = k.id; cerrar(); }          // el setter ya escribe el texto
+
+  txt.addEventListener('focus', () => { txt.select(); abrir(); });
+  txt.addEventListener('click', () => { if(!abierto) abrir(); });
+  txt.addEventListener('input', () => {
+    if(hid.value) crudo('');                                  // al escribir se deshace la elección anterior
+    idx = txt.value.trim() ? 0 : -1;                          // la primera coincidencia queda lista para Enter
+    abrir();
+  });
+  txt.addEventListener('keydown', e => {
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault(); if(!abierto) abrir();
+      if(items.length){ idx = (idx + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length; pintar(); }
+    } else if(e.key === 'Enter'){
+      if(abierto && items[idx]){ e.preventDefault(); elegir(items[idx]); }
+      else if(abierto && items.length === 1){ e.preventDefault(); elegir(items[0]); }
+    } else if(e.key === 'Escape'){
+      if(abierto){ e.preventDefault(); e.stopPropagation(); cerrar(); }
+    }
+  });
+  txt.addEventListener('blur', () => {
+    cerrar();
+    if(hid.value) { mostrar(); return; }
+    const q = norm(txt.value); if(!q) return;
+    const ex = estado.clientes.filter(k => norm(k.nombre) === q || norm(etiquetaCliente(k)) === q || norm(k.idc) === q);
+    if(ex.length === 1) hid.value = ex[0].id;                 // texto exacto = cliente elegido
+  });
+  // mousedown (no click) para elegir antes de que el campo pierda el foco
+  lista.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const li = e.target.closest('.combo-op'); if(li) elegir(items[+li.dataset.i]);
+  });
+  lista.addEventListener('mousemove', e => {
+    const li = e.target.closest('.combo-op');
+    if(li && +li.dataset.i !== idx){ idx = +li.dataset.i; lista.querySelectorAll('.combo-op').forEach((o, i) => o.classList.toggle('is-sel', i === idx)); }
+  });
+  $('#formRegistro').addEventListener('reset', () => setTimeout(() => { crudo(''); txt.value = ''; cerrar(); }, 0));
+
+  comboCliente = { refrescar: () => { if(document.activeElement !== txt) mostrar(); } };
+  mostrar();
 }

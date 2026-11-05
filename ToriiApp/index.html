@@ -222,7 +222,7 @@
           <label>Fecha <input type="date" id="rFecha" required>
             <small class="hint" id="rFechaHint">—</small>
           </label>
-          <div class="campo"><span class="campo-label">Cliente</span><div class="fila-cli"><select id="rCliente" required></select><button type="button" class="btn btn-linea" id="btnNuevoCli">+ Nuevo</button></div></div>
+          <div class="campo"><span class="campo-label">Cliente</span><div class="fila-cli"><div class="combo" id="comboCliente"><input type="text" id="rClienteTxt" placeholder="Escribe para buscar un cliente…" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="rClienteLista" aria-autocomplete="list"><input type="hidden" id="rCliente"><ul class="combo-lista" id="rClienteLista" role="listbox" hidden></ul></div><button type="button" class="btn btn-linea" id="btnNuevoCli">+ Nuevo</button></div></div>
           <label>Figura <input type="text" id="rFigura" required placeholder="Ej. Nendoroid Gojo Satoru"></label>
           <label>Método de pago <select id="rMetodo" required></select></label>
           <label>Precio en dólares <input type="number" id="rPrecio" min="0" step="0.01" required placeholder="0.00"></label>
