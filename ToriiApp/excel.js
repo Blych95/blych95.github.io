@@ -234,7 +234,7 @@ function hojaRegistros(nombre, bloque, rs, conPago){
         operaciones.push({
           fecha: ab.fecha, cliente: r.nombre, figura: r.figura,
           operacion: isFirst ? 'Apartado' : 'Abono',
-          precio: r.precio, metodo: r.metodo, monto: pagado, deudaAnt: deuda, restante: rest,
+          precio: r.precio, metodo: ab.metodo || r.metodo, monto: pagado, deudaAnt: deuda, restante: rest,
           estado: rest <= 0 ? 'Pagado' : 'Pendiente', nota: ab.nota || '',
           deudaFinal: isFirst ? deudaActualApp : ''
         });

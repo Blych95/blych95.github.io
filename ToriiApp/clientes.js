@@ -8,7 +8,11 @@ const sumarDias = (iso, n) => { const d = aFecha(iso); d.setDate(d.getDate() + n
 
 /* ---------- plazo de apartados ---------- */
 const fechaApartado = r => r.fechaApartado || (r.estado === 'apartado' ? r.fecha : null);
-const limiteDe = r => { const f = fechaApartado(r); return f ? sumarDias(f, DIAS_LIMITE) : null; };
+const limiteDe = r => { 
+  if (r.corteVip) return r.corteVip; 
+  const f = fechaApartado(r); 
+  return f ? sumarDias(f, DIAS_LIMITE) : null; 
+};
 
 function estadoLimite(r){                                   // solo para apartados pendientes
   const dias = Math.round((aFecha(limiteDe(r)) - aFecha(hoyISO())) / 864e5);
@@ -74,8 +78,22 @@ function prepararRegistro(b, prev){                         // se llama al guard
 /* ---------- ayudas del formulario de registro ---------- */
 function pintarExtrasForm(){
   const ap = estadoForm() === 'apartado' && $('#rFecha').value;
+  
+  const cliId = $('#rCliente').value;
+  const cli = estado.clientes.find(c => c.id === cliId);
+  const esVip = cli && cli.categorias && cli.categorias.some(c => c.toLowerCase().includes('vip'));
+  
+  const divVip = $('#zonaVip');
+  if(divVip) {
+      if(ap && esVip) divVip.hidden = false;
+      else divVip.hidden = true;
+  }
+
+  const corteVip = $('#rCorteVip') ? $('#rCorteVip').value : null;
+  const fCorte = corteVip ? corteVip : sumarDias($('#rFecha').value, DIAS_LIMITE);
+
   $('#plazoBox').innerHTML = ap
-    ? `Apartado el <b>${fmtFecha($('#rFecha').value)}</b> · Tiene hasta el <b>${fmtFecha(sumarDias($('#rFecha').value, DIAS_LIMITE))}</b> para pagar el resto (${DIAS_LIMITE} días)` : '';
+    ? `Apartado el <b>${fmtFecha($('#rFecha').value)}</b> · Límite: <b>${fmtFecha(fCorte)}</b> ${corteVip ? '<span style="color:#FFBC002D">(VIP)</span>' : `(${DIAS_LIMITE} días)`}` : '';
 }
 
 /* ---------- lista de clientes ---------- */

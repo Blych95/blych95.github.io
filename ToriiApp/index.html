@@ -222,7 +222,7 @@
           <label>Fecha <input type="date" id="rFecha" required>
             <small class="hint" id="rFechaHint">—</small>
           </label>
-          <div class="campo"><span class="campo-label">Cliente</span><div class="fila-cli"><div class="combo" id="comboCliente"><input type="text" id="rClienteTxt" placeholder="Escribe para buscar un cliente…" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="rClienteLista" aria-autocomplete="list"><input type="hidden" id="rCliente"><ul class="combo-lista" id="rClienteLista" role="listbox" hidden></ul></div><button type="button" class="btn btn-linea" id="btnNuevoCli">+ Nuevo</button></div></div>
+          <div class="campo"><span class="campo-label">Cliente</span><div class="fila-cli"><select id="rCliente" required></select><button type="button" class="btn btn-linea" id="btnNuevoCli">+ Nuevo</button></div></div>
           <label>Figura <input type="text" id="rFigura" required placeholder="Ej. Nendoroid Gojo Satoru"></label>
           <label>Método de pago <select id="rMetodo" required></select></label>
           <label>Precio en dólares <input type="number" id="rPrecio" min="0" step="0.01" required placeholder="0.00"></label>
@@ -241,12 +241,25 @@
 
         <div class="abono-inicial" id="abonoInicial" hidden>
           <p class="plazo" id="plazoBox"></p>
-          <label>Abono inicial <span class="opcional">opcional</span>
-            <input type="number" id="rAbono" min="0" step="0.01" placeholder="0.00">
-          </label>
-          <label>Nota <span class="opcional">opcional</span>
-            <input type="text" id="rNota" placeholder="Ej. abona el resto el 30">
-          </label>
+          
+          <div class="zona-vip" id="zonaVip" hidden style="background: #FFFBE0E5; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #FFBC002D;">
+            <span style="color:#FFBC002D; font-weight:bold; display:block; margin-bottom:8px;">★ Opciones VIP habilitadas</span>
+            <div class="form-grid">
+              <label>Fecha de corte (VIP) <input type="date" id="rCorteVip"></label>
+              <label>Fecha final de pago <input type="date" id="rPagoVip"></label>
+            </div>
+          </div>
+
+          <div class="form-grid">
+             <label>Fecha del abono <input type="date" id="rFechaAbono"></label>
+             <label>Método de abono <select id="rMetodoAbono"></select></label>
+             <label>Abono inicial <span class="opcional">opcional</span>
+               <input type="number" id="rAbono" min="0" step="0.01" placeholder="0.00">
+             </label>
+             <label>Nota <span class="opcional">opcional</span>
+               <input type="text" id="rNota" placeholder="Ej. abona el resto el 30">
+             </label>
+          </div>
         </div>
 
         <div class="preview" id="previewPrecio">
