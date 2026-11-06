@@ -12,7 +12,7 @@ const CONFIG_BASE = {
   tasasFecha: null,
   metodosPago: ['Efectivo $', 'Zelle', 'Pago móvil', 'Binance', 'Transferencia Bs', 'Pesos'],
   campos: [],
-  categoriasCliente: ['Estrella', 'Nuevo', 'Frecuente']
+  categoriasCliente: ['Estrella', 'Nuevo', 'Frecuente', 'VIP']
 };
 
 let estado = { registros: [], clientes: [], vendedores: [], config: clonar(CONFIG_BASE) };
@@ -406,6 +406,19 @@ function abrirDetalle(id){
       </form>` : ''}
     </div>` : '';
 
+  const f0 = fechaApartado(r);
+  const bloqueVip = esVip(r) ? `
+    <div class="m-abonos">
+      <h3>Fechas VIP</h3>
+      <form class="form-abono" id="formVip">
+        ${esApartado
+          ? `<label>Fecha de corte <input type="date" id="vFechaLimite" required value="${esc(limiteDe(r) || '')}"></label>`
+          : `<label>Fecha de pago <input type="date" id="vFechaPago" required value="${esc(r.fechaPago || r.fecha || '')}"></label>`}
+        <button class="btn btn-linea" type="submit">Guardar fecha</button>
+      </form>
+      <small class="hint">Cliente VIP: la fecha puede ir más allá de los ${DIAS_LIMITE} días.</small>
+    </div>` : '';
+
   $('#modalContenido').innerHTML = `
     <div class="m-head">
       <h2 id="mFigura">${esc(r.figura)}</h2>
@@ -429,6 +442,7 @@ function abrirDetalle(id){
     </div>
 
     ${bloqueAbonos}
+    ${bloqueVip}
 
     <div class="m-acciones">
       ${r.estado === 'apartado' ? '<button class="btn btn-verde" id="btnPagado">Marcar como pagado</button>' : ''}
@@ -445,6 +459,24 @@ function abrirDetalle(id){
   $('#btnEliminar').addEventListener('click', () => eliminarRegistro(id));
   const bp = $('#btnPagado');
   if(bp) bp.addEventListener('click', () => marcarPagado(id));
+
+  const fv = $('#formVip');
+  if(fv) fv.addEventListener('submit', e => {
+    e.preventDefault();
+    if(esApartado){
+      const v = $('#vFechaLimite').value;
+      if(!v) return;
+      if(v < f0){ aviso('La fecha de corte no puede ser anterior al apartado.', 'error'); return; }
+      r.fechaLimite = v !== sumarDias(f0, DIAS_LIMITE) ? v : undefined;
+    } else {
+      const v = $('#vFechaPago').value;
+      if(!v) return;
+      r.fechaPago = v;
+    }
+    r.actualizado = new Date().toISOString();
+    guardar(); pintarLista(); pintarDashboard(); abrirDetalle(id);
+    aviso('Fecha actualizada.');
+  });
 
   const fa = $('#formAbono');
   if(fa) fa.addEventListener('submit', e => {

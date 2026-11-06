@@ -52,6 +52,10 @@ function migrar(){                                          // completa datos de
   let cambio = false;
   estado.vendedores = estado.vendedores || [];
   estado.clientes.forEach(c => { if(!Array.isArray(c.categorias)) c.categorias = []; });
+  if(!estado.config.vipSembrado){                            // añade la categoría VIP una sola vez (si luego la quitas, no vuelve)
+    estado.config.vipSembrado = true; cambio = true;
+    if(!estado.config.categoriasCliente.some(t => norm(t) === 'vip')) estado.config.categoriasCliente.push('VIP');
+  }
   [...estado.clientes].filter(c => !c.idc).sort((a, b) => (a.creado || '').localeCompare(b.creado || '')).forEach(c => { c.idc = nuevoIdc(); cambio = true; });
   [...estado.registros].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '')).forEach(r => {   // nombres sueltos → perfil de cliente
     if(!r.nombre || r.clienteId || clientePorNombre(r.nombre)) return;
@@ -419,7 +423,7 @@ function iniciarComboCliente(){
   const mostrar = () => { const k = elegido(); txt.value = k ? etiquetaCliente(k) : ''; };
 
   // Cuando otro código asigna $('#rCliente').value = id, el texto se actualiza solo.
-  Object.defineProperty(hid, 'value', { get(){ return desc.get.call(this); }, set(v){ desc.set.call(this, v); mostrar(); } });
+  Object.defineProperty(hid, 'value', { get(){ return desc.get.call(this); }, set(v){ desc.set.call(this, v); mostrar(); pintarExtrasForm(); } });
 
   function buscar(q){
     const ts = norm(q).split(' ').filter(Boolean);
@@ -458,7 +462,7 @@ function iniciarComboCliente(){
   txt.addEventListener('focus', () => { txt.select(); abrir(); });
   txt.addEventListener('click', () => { if(!abierto) abrir(); });
   txt.addEventListener('input', () => {
-    if(hid.value) crudo('');                                  // al escribir se deshace la elección anterior
+    if(hid.value){ crudo(''); pintarExtrasForm(); }           // al escribir se deshace la elección anterior
     idx = txt.value.trim() ? 0 : -1;                          // la primera coincidencia queda lista para Enter
     abrir();
   });
