@@ -399,7 +399,6 @@ function abrirDetalle(id){
       ${esApartado ? `
       <form class="form-abono" id="formAbono">
         <label>Fecha <input type="date" id="aFecha" required value="${hoyISO()}"></label>
-        <label>Método de abono <select id="aMetodo" required></select></label>
         <label>Monto en dólares <input type="number" id="aMonto" min="0.01" step="0.01" required placeholder="0.00"></label>
         <label>Nota <input type="text" id="aNota" placeholder="opcional"></label>
         <button class="btn btn-linea" type="submit">Añadir abono</button>
@@ -447,15 +446,12 @@ function abrirDetalle(id){
   if(bp) bp.addEventListener('click', () => marcarPagado(id));
 
   const fa = $('#formAbono');
-  if(fa){
-    const am = $('#aMetodo');
-    if(am) am.innerHTML = estado.config.metodosPago.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
-    fa.addEventListener('submit', e => {
+  if(fa) fa.addEventListener('submit', e => {
     e.preventDefault();
     const monto = Number($('#aMonto').value);
     if(!(monto > 0)) return;
     r.abonos = r.abonos || [];
-    r.abonos.push({ id: uid(), fecha: $('#aFecha').value, metodo: $('#aMetodo').value, monto, nota: $('#aNota').value.trim() });
+    r.abonos.push({ id: uid(), fecha: $('#aFecha').value, monto, nota: $('#aNota').value.trim() });
     if(abonado(r) >= (Number(r.precio) || 0)){
       r.estado = 'pagado'; r.fechaPago = hoyISO();
       aviso('Apartado completado. El registro pasó a Pagado.');
@@ -590,10 +586,6 @@ $('#formRegistro').addEventListener('submit', e => {
     extra,
     actualizado: new Date().toISOString()
   };
-  
-  if($('#rCorteVip') && $('#rCorteVip').value) base.corteVip = $('#rCorteVip').value;
-  if($('#rPagoVip') && $('#rPagoVip').value) base.pagoVip = $('#rPagoVip').value;
-
   prepararRegistro(base, editandoId ? estado.registros.find(x => x.id === editandoId) : null);
 
   if(editandoId){
@@ -608,10 +600,8 @@ $('#formRegistro').addEventListener('submit', e => {
     const nuevo = Object.assign({ id: uid(), creado: new Date().toISOString(), abonos: [] }, base);
     const ab = Number($('#rAbono').value);
     if(nuevo.estado === 'apartado' && ab > 0){
-      const fAbono = ($('#rFechaAbono') && $('#rFechaAbono').value) ? $('#rFechaAbono').value : nuevo.fecha;
-      const mAbono = ($('#rMetodoAbono') && $('#rMetodoAbono').value) ? $('#rMetodoAbono').value : nuevo.metodo;
-      nuevo.abonos.push({ id: uid(), fecha: fAbono, metodo: mAbono, monto: ab, nota: $('#rNota').value.trim() });
-      if(ab >= precio){ nuevo.estado = 'pagado'; nuevo.fechaPago = fAbono; }
+      nuevo.abonos.push({ id: uid(), fecha: nuevo.fecha, monto: ab, nota: $('#rNota').value.trim() });
+      if(ab >= precio){ nuevo.estado = 'pagado'; nuevo.fechaPago = nuevo.fecha; }
     }
     estado.registros.push(nuevo);
     guardar();
@@ -884,9 +874,3 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
     location.reload();
   });
 }
-
-
-setTimeout(() => {
-  if($('#rCorteVip')) $('#rCorteVip').addEventListener('input', pintarExtrasForm);
-  if($('#rCliente')) $('#rCliente').addEventListener('change', pintarExtrasForm);
-}, 1000);
