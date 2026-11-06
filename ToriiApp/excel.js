@@ -210,12 +210,13 @@ function hojaRegistros(nombre, bloque, rs, conPago){
   // Aplanamos los registros
   const operaciones = [];
   rs.forEach(r => {
+    const nOps = operaciones.length;
     let deudaActualApp = (r.estado === 'pagado') ? 0 : Math.max(0, (Number(r.precio) || 0) - (r.abonos || []).reduce((s, a) => s + (Number(a.monto) || 0), 0));
     
     if (r.abonos && r.abonos.length > 0) {
       const abonos = [...r.abonos].sort((a,b) => a.fecha.localeCompare(b.fecha));
       let deuda = Number(r.precio) || 0;
-      let hasInitialAbono = abonos[0].fecha === r.fecha;
+      let hasInitialAbono = abonos[0].fecha === r.fecha || abonos[0].inicial === true;
       
       if (!hasInitialAbono) {
         operaciones.push({
@@ -234,7 +235,7 @@ function hojaRegistros(nombre, bloque, rs, conPago){
         operaciones.push({
           fecha: ab.fecha, cliente: r.nombre, figura: r.figura,
           operacion: isFirst ? 'Apartado' : 'Abono',
-          precio: r.precio, metodo: r.metodo, monto: pagado, deudaAnt: deuda, restante: rest,
+          precio: r.precio, metodo: ab.metodo || r.metodo, monto: pagado, deudaAnt: deuda, restante: rest,
           estado: rest <= 0 ? 'Pagado' : 'Pendiente', nota: ab.nota || '',
           deudaFinal: isFirst ? deudaActualApp : ''
         });
@@ -266,13 +267,17 @@ function hojaRegistros(nombre, bloque, rs, conPago){
         });
       }
     }
+    for(let i = nOps; i < operaciones.length; i++){                 // fecha de corte (límite) y fecha de pago de cada pedido
+      operaciones[i].corte = limiteDe(r) || '';
+      operaciones[i].pago = r.estado === 'pagado' ? (r.fechaPago || r.fecha) : '';
+    }
   });
 
-  const cab = ['Fecha', ...(conPago ? [] : ['Cliente']), 'Figura / Producto', 'Operación', 'Precio Total', 'Método de Pago', 'Monto Pagado', 'Deuda Anterior', 'Restante por Cobrar', 'Estado', 'Notas y Observación', 'Saldo del Pedido'];
+  const cab = ['Fecha', ...(conPago ? [] : ['Cliente']), 'Figura / Producto', 'Operación', 'Precio Total', 'Método de Pago', 'Monto Pagado', 'Deuda Anterior', 'Restante por Cobrar', 'Estado', 'Notas y Observación', 'Saldo del Pedido', 'Fecha de Corte', 'Fecha de Pago'];
   
   // Convertimos el bloque superior a cabecera roja ancha
   const bloqueEstilizado = [
-    [['Registro Torii — Registros', 'tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash']],
+    [['Registro Torii — Registros', 'tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash']],
     bloque[1] // La fila de "Del 30-10 al..." se mantiene
   ];
   
@@ -293,6 +298,8 @@ function hojaRegistros(nombre, bloque, rs, conPago){
       [o.estado, o.estado === 'Pagado' ? 'ok' : 'ap'],
       [o.nota, 'txt'],
       [o.deudaFinal, 'usd'],
+      [o.corte, 'fec'],
+      [o.pago, 'fec'],
       ['', 'bg']
     ]);
   });
@@ -304,7 +311,7 @@ function hojaRegistros(nombre, bloque, rs, conPago){
     ['TOTAL', 'tl'],
     ...Array(conPago ? 4 : 5).fill(['', 'tl']),
     [0, 'usd_b', `SUBTOTAL(109,${colMonto}${hr + 1}:${colMonto}${hr + n})`],
-    ...Array(5).fill(['', 'tl']),
+    ...Array(7).fill(['', 'tl']),
     ['', 'bg']
   ]);
 
@@ -325,10 +332,10 @@ function hojaRegistros(nombre, bloque, rs, conPago){
   return {
     nombre: nombre,
     filas,
-    anchos: [15, ...(conPago ? [] : [22]), 25, 14, 13, 16, 15, 15, 17, 12, 25, 16, 10],
+    anchos: [15, ...(conPago ? [] : [22]), 25, 14, 13, 16, 15, 15, 17, 12, 25, 16, 15, 15, 10],
     congelar: hr,
     filtro: `A${hr}:${ExcelLite.col(cab.length - 1)}${hr + n}`,
-    merge: 'A1:L1',
+    merge: 'A1:N1',
     validations
   };
 }

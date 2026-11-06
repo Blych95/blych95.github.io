@@ -383,7 +383,7 @@ function abrirDetalle(id){
 
   const listaAbonos = (r.abonos || []).map(a => `
     <li>
-      <span>${fmtFecha(a.fecha)}${a.nota ? ' · ' + esc(a.nota) : ''}</span>
+      <span>${fmtFecha(a.fecha)}${(a.metodo || r.metodo) ? ' · ' + esc(a.metodo || r.metodo) : ''}${a.nota ? ' · ' + esc(a.nota) : ''}</span>
       <span><b>${usd(a.monto)}</b> <button class="quitar" data-abono="${a.id}" title="Quitar abono">✕</button></span>
     </li>`).join('');
 
@@ -400,6 +400,7 @@ function abrirDetalle(id){
       <form class="form-abono" id="formAbono">
         <label>Fecha <input type="date" id="aFecha" required value="${hoyISO()}"></label>
         <label>Monto en dólares <input type="number" id="aMonto" min="0.01" step="0.01" required placeholder="0.00"></label>
+        <label>Método de pago <select id="aMetodo" required>${opcionesMetodo(r.metodo)}</select></label>
         <label>Nota <input type="text" id="aNota" placeholder="opcional"></label>
         <button class="btn btn-linea" type="submit">Añadir abono</button>
       </form>` : ''}
@@ -451,7 +452,7 @@ function abrirDetalle(id){
     const monto = Number($('#aMonto').value);
     if(!(monto > 0)) return;
     r.abonos = r.abonos || [];
-    r.abonos.push({ id: uid(), fecha: $('#aFecha').value, monto, nota: $('#aNota').value.trim() });
+    r.abonos.push({ id: uid(), fecha: $('#aFecha').value, monto, metodo: $('#aMetodo').value, nota: $('#aNota').value.trim() });
     if(abonado(r) >= (Number(r.precio) || 0)){
       r.estado = 'pagado'; r.fechaPago = hoyISO();
       aviso('Apartado completado. El registro pasó a Pagado.');
@@ -522,8 +523,18 @@ function previewPrecio(){
   pintarExtrasForm();
 }
 
+function opcionesMetodo(sel){                       // lista de métodos de pago para un <select> (conserva uno ya usado aunque se haya quitado de la lista)
+  const lista = [...estado.config.metodosPago];
+  if(sel && !lista.includes(sel)) lista.push(sel);
+  return lista.map(m => `<option value="${esc(m)}" ${m === sel ? 'selected' : ''}>${esc(m)}</option>`).join('');
+}
+
 function pintarMetodos(){
   const opciones = estado.config.metodosPago;
+  const actualAb = $('#rAbonoMetodo').value;
+  $('#rAbonoMetodo').innerHTML = '<option value="">Igual que el del registro</option>' +
+    opciones.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  if(opciones.includes(actualAb)) $('#rAbonoMetodo').value = actualAb;
   $('#rMetodo').innerHTML = '<option value="" disabled selected>Elige un método…</option>' +
     opciones.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
   const actual = $('#fMetodo').value;
@@ -600,8 +611,9 @@ $('#formRegistro').addEventListener('submit', e => {
     const nuevo = Object.assign({ id: uid(), creado: new Date().toISOString(), abonos: [] }, base);
     const ab = Number($('#rAbono').value);
     if(nuevo.estado === 'apartado' && ab > 0){
-      nuevo.abonos.push({ id: uid(), fecha: nuevo.fecha, monto: ab, nota: $('#rNota').value.trim() });
-      if(ab >= precio){ nuevo.estado = 'pagado'; nuevo.fechaPago = nuevo.fecha; }
+      const fechaAb = $('#rAbonoFecha').value || nuevo.fecha;
+      nuevo.abonos.push({ id: uid(), fecha: fechaAb, monto: ab, metodo: $('#rAbonoMetodo').value || nuevo.metodo, nota: $('#rNota').value.trim(), inicial: true });
+      if(ab >= precio){ nuevo.estado = 'pagado'; nuevo.fechaPago = fechaAb; }
     }
     estado.registros.push(nuevo);
     guardar();
@@ -617,6 +629,7 @@ $('#btnVaciar').addEventListener('click', limpiarForm);
 function limpiarForm(){
   $('#formRegistro').reset();
   $('#rFecha').value = hoyISO();
+  $('#rAbonoFecha').value = hoyISO(); delete $('#rAbonoFecha').dataset.manual;
   $('#rFechaHint').textContent = fmtFecha(hoyISO());
   ponerEstadoForm('pagado');
   pintarCamposForm();
@@ -644,6 +657,8 @@ function editarRegistro(id){
   ponerEstadoForm(r.estado);
   $('#abonoInicial').hidden = true;      // los abonos se gestionan en el detalle
   pintarCamposForm(r.extra || {});
+  $('#rFechaLimite').value = r.fechaLimite || '';                          // solo se usan si el cliente es VIP
+  $('#rFechaPago').value = r.estado === 'pagado' ? (r.fechaPago || '') : '';
   previewPrecio();
 }
 

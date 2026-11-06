@@ -244,8 +244,24 @@
           <label>Abono inicial <span class="opcional">opcional</span>
             <input type="number" id="rAbono" min="0" step="0.01" placeholder="0.00">
           </label>
+          <label>Fecha del aporte
+            <input type="date" id="rAbonoFecha">
+          </label>
+          <label>Método de pago del aporte
+            <select id="rAbonoMetodo"></select>
+          </label>
           <label>Nota <span class="opcional">opcional</span>
             <input type="text" id="rNota" placeholder="Ej. abona el resto el 30">
+          </label>
+        </div>
+
+        <div class="abono-inicial" id="vipBox" hidden>
+          <p class="plazo" id="vipAviso">Cliente VIP: puedes ajustar estas fechas más allá de los 45 días.</p>
+          <label id="vipCorte">Fecha de corte <span class="opcional">vacío = 45 días</span>
+            <input type="date" id="rFechaLimite">
+          </label>
+          <label id="vipPago" hidden>Fecha de pago <span class="opcional">vacío = fecha del registro</span>
+            <input type="date" id="rFechaPago">
           </label>
         </div>
 

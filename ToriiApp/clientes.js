@@ -8,7 +8,10 @@ const sumarDias = (iso, n) => { const d = aFecha(iso); d.setDate(d.getDate() + n
 
 /* ---------- plazo de apartados ---------- */
 const fechaApartado = r => r.fechaApartado || (r.estado === 'apartado' ? r.fecha : null);
-const limiteDe = r => { const f = fechaApartado(r); return f ? sumarDias(f, DIAS_LIMITE) : null; };
+const esVipCliente = c => !!c && (c.categorias || []).some(t => norm(t) === 'vip');       // categoría "VIP" (editable en Configuración)
+const esVip = r => esVipCliente(estado.clientes.find(k => k.id === r.clienteId));
+const limitePersonalizado = r => { const f = fechaApartado(r); return !!(f && r.fechaLimite && r.fechaLimite >= f && esVip(r)); };   // solo VIP
+const limiteDe = r => { const f = fechaApartado(r); if(!f) return null; return limitePersonalizado(r) ? r.fechaLimite : sumarDias(f, DIAS_LIMITE); };
 
 function estadoLimite(r){                                   // solo para apartados pendientes
   const dias = Math.round((aFecha(limiteDe(r)) - aFecha(hoyISO())) / 864e5);
@@ -27,7 +30,7 @@ function plazoDatos(r){
   if(!fa) return vd;
   const e = r.estado === 'apartado' ? estadoLimite(r) : null;
   return vd + `<div class="m-dato"><span>Apartado el</span><b>${fmtFecha(fa)}</b></div>
-    <div class="m-dato"><span>Límite de pago (${DIAS_LIMITE} días)</span><b class="${e ? 'lim ' + e.cls : ''}">${fmtFecha(limiteDe(r))}${e ? ' · ' + e.txt : ''}</b></div>
+    <div class="m-dato"><span>${limitePersonalizado(r) ? 'Fecha de corte (VIP)' : `Límite de pago (${DIAS_LIMITE} días)`}</span><b class="${e ? 'lim ' + e.cls : ''}">${fmtFecha(limiteDe(r))}${e ? ' · ' + e.txt : ''}</b></div>
     ${r.estado === 'pagado' ? `<div class="m-dato"><span>Pagado el</span><b>${fmtFecha(r.fechaPago || r.fecha)}</b></div>` : ''}`;
 }
 
@@ -65,17 +68,32 @@ function migrar(){                                          // completa datos de
 function prepararRegistro(b, prev){                         // se llama al guardar un registro
   const c = estado.clientes.find(k => k.id === $('#rCliente').value);
   b.clienteId = c.id; b.nombre = c.nombre;
-  if(b.estado === 'apartado'){ b.fechaApartado = b.fecha; b.fechaPago = undefined; return; }
+  if(b.estado === 'apartado'){ b.fechaApartado = b.fecha; b.fechaPago = undefined; aplicarFechasVip(b, c); return; }
   const fa = prev && (prev.fechaApartado || (prev.estado === 'apartado' ? prev.fecha : null));
   b.fechaApartado = fa || undefined;
   b.fechaPago = prev && prev.estado === 'apartado' ? hoyISO() : (prev && prev.fechaPago) || b.fecha;
+  aplicarFechasVip(b, c);
+}
+function aplicarFechasVip(b, c){                           // fecha de corte y fecha de pago editables: solo clientes VIP
+  const vip = esVipCliente(c);
+  const fl = $('#rFechaLimite') ? $('#rFechaLimite').value : '', fp = $('#rFechaPago') ? $('#rFechaPago').value : '';
+  b.fechaLimite = undefined;
+  if(vip && b.estado === 'apartado' && fl){
+    if(fl >= b.fecha) b.fechaLimite = fl;
+    else aviso('La fecha de corte no puede ser anterior al apartado: se usó el plazo normal de ' + DIAS_LIMITE + ' días.', 'error');
+  }
+  if(vip && b.estado === 'pagado' && fp) b.fechaPago = fp;
 }
 
 /* ---------- ayudas del formulario de registro ---------- */
 function pintarExtrasForm(){
   const ap = estadoForm() === 'apartado' && $('#rFecha').value;
+  const vip = esVipCliente(estado.clientes.find(k => k.id === $('#rCliente').value));
+  const box = $('#vipBox');
+  if(box){ box.hidden = !vip; $('#vipCorte').hidden = estadoForm() !== 'apartado'; $('#vipPago').hidden = estadoForm() !== 'pagado'; }
+  const fl = vip && ap && $('#rFechaLimite') && $('#rFechaLimite').value >= $('#rFecha').value ? $('#rFechaLimite').value : '';
   $('#plazoBox').innerHTML = ap
-    ? `Apartado el <b>${fmtFecha($('#rFecha').value)}</b> · Tiene hasta el <b>${fmtFecha(sumarDias($('#rFecha').value, DIAS_LIMITE))}</b> para pagar el resto (${DIAS_LIMITE} días)` : '';
+    ? `Apartado el <b>${fmtFecha($('#rFecha').value)}</b> · Tiene hasta el <b>${fmtFecha(fl || sumarDias($('#rFecha').value, DIAS_LIMITE))}</b> para pagar el resto (${fl ? 'fecha de corte VIP' : DIAS_LIMITE + ' días'})` : '';
 }
 
 /* ---------- lista de clientes ---------- */
@@ -144,7 +162,7 @@ function abrirCliente(id){
   $$('#modalContenido .hist li[data-id]').forEach(li => li.addEventListener('click', () => abrirDetalle(li.dataset.id)));
   $('#cEditar').addEventListener('click', () => formCliente(id));
   $('#cExcel').addEventListener('click', () => exportarCliente(id));
-  $('#cNuevoReg').addEventListener('click', () => { cerrarModal(); irA('registro'); $('#rCliente').value = id; });
+  $('#cNuevoReg').addEventListener('click', () => { cerrarModal(); irA('registro'); $('#rCliente').value = id; pintarExtrasForm(); });
   $('#cEliminar').addEventListener('click', () => {
     if(!confirm(`¿Eliminar el perfil de "${c.nombre}"? Sus ${rs.length} registros NO se borran.`)) return;
     estado.clientes = estado.clientes.filter(k => k.id !== id);
@@ -229,7 +247,12 @@ function iniciarClientes(){
     ['#cCategoria', '#cOrden'].forEach(s => $(s).addEventListener('change', pintarClientes));
     iniciarComboCliente();
     $('#btnNuevoCliente').addEventListener('click', () => formCliente(null));
-    $('#btnNuevoCli').addEventListener('click', () => formCliente(null, k => { $('#rCliente').value = k.id; }));
+    $('#btnNuevoCli').addEventListener('click', () => formCliente(null, k => { $('#rCliente').value = k.id; pintarExtrasForm(); }));
+    $('#rCliente').addEventListener('change', pintarExtrasForm);
+    $('#rFechaLimite').addEventListener('input', pintarExtrasForm);
+    $('#rFecha').addEventListener('input', () => { const a = $('#rAbonoFecha'); if(!a.dataset.manual) a.value = $('#rFecha').value; });   // el aporte sigue la fecha del registro mientras no se cambie
+    $('#rFecha').addEventListener('change', () => { const a = $('#rAbonoFecha'); if(!a.dataset.manual) a.value = $('#rFecha').value; });
+    $('#rAbonoFecha').addEventListener('input', () => { $('#rAbonoFecha').dataset.manual = '1'; });
     $('#formCategoria').addEventListener('submit', e => {
       e.preventDefault();
       const v = $('#nuevaCategoria').value.trim(), cats = estado.config.categoriasCliente;
