@@ -874,3 +874,4 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
     location.reload();
   });
 }
+}
