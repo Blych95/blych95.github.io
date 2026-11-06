@@ -10,19 +10,19 @@ const ExcelLite = (() => {
 
   // estilos: [fuente, relleno, borde, formato numérico, alineación]
   const ST = { 
-    def:[0,0,0,0], tit:[2,0,0,0], tit_big:[8,0,0,0], nota:[3,0,0,0], fpl:[0,0,0,164,'l'], 
-    lbl:[4,0,0,0], lbl_b:[4,5,1,0], sel:[4,4,1,0,'c'], enc_blk:[1,2,1,0,'c'], enc_red:[1,7,1,0,'c'], txt:[0,0,1,0],
-    fec:[0,0,1,164,'c'], usd:[0,0,1,165], usd_b:[4,5,1,165], usd_blk:[1,2,1,165], usd_red:[1,7,1,165], 
-    bs:[0,0,1,166], cop:[0,0,1,167], ok:[5,3,1,0,'c'], ap:[6,4,1,0,'c'], ven:[7,6,1,164,'c'], tl:[4,5,1,0] 
+    def:[0,0,0,0], bg:[0,8,0,0], bg_b:[0,8,1,0], tit:[2,9,0,0], tit_dash:[8,9,2,0,'c'], nota:[3,0,0,0], fpl:[0,0,0,164,'l'], 
+    lbl:[4,0,1,0], lbl_b:[4,5,1,0], sel:[4,4,1,0,'c'], enc_blk:[1,2,1,0,'c'], enc_red:[1,9,1,0,'c'], txt:[0,0,1,0],
+    fec:[0,0,1,164,'c'], usd:[0,0,1,165], usd_b:[4,5,1,165], 
+    bs:[0,0,1,166], cop:[0,0,1,167], ok:[5,3,1,0,'c'], ap:[6,4,1,0,'c'], tl:[4,5,1,0] 
   };
   const KEYS = Object.keys(ST);
   const FECHAS = ['fec', 'ven', 'fpl'];
 
   const styles = () => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="4"><numFmt numFmtId="164" formatCode="dd\\-mm\\-yyyy"/><numFmt numFmtId="165" formatCode="&quot;$&quot;#,##0.00"/><numFmt numFmtId="166" formatCode="&quot;Bs &quot;#,##0.00"/><numFmt numFmtId="167" formatCode="#,##0&quot; COP&quot;"/></numFmts>
-<fonts count="9"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FFBC002D"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF666666"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1E8E5E"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFC96A0A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFBC002D"/><name val="Calibri"/></font><font><b/><sz val="22"/><color rgb="FFBC002D"/><name val="Calibri"/></font></fonts>
-<fills count="8"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${['FF0B0B0C','FFDFF5EA','FFFCE9D2','FFF2F2F2','FFFBE0E5','FFBC002D'].map(c => `<fill><patternFill patternType="solid"><fgColor rgb="${c}"/><bgColor indexed="64"/></patternFill></fill>`).join('')}</fills>
-<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border>${['left','right','top','bottom'].map(l => `<${l} style="thin"><color rgb="FFD0D0D0"/></${l}>`).join('')}<diagonal/></border></borders>
+<fonts count="10"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF666666"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1E8E5E"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFC96A0A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFBC002D"/><name val="Calibri"/></font><font><b/><sz val="20"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="20"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts>
+<fills count="10"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${['FF0B0B0C','FFDFF5EA','FFFCE9D2','FFF2F2F2','FFFBE0E5','FFBC002D','FF666666','FF980000'].map(c => `<fill><patternFill patternType="solid"><fgColor rgb="${c}"/><bgColor indexed="64"/></patternFill></fill>`).join('')}</fills>
+<borders count="3"><border><left/><right/><top/><bottom/><diagonal/></border><border>${['left','right','top','bottom'].map(l => `<${l} style="thin"><color rgb="FFD0D0D0"/></${l}>`).join('')}<diagonal/></border><border>${['left','right','top','bottom'].map(l => `<${l} style="thick"><color rgb="FF000000"/></${l}>`).join('')}<diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
 <cellXfs count="${KEYS.length}">${KEYS.map(k => { const [f, fl, b, n, al] = ST[k];
   return `<xf numFmtId="${n}" fontId="${f}" fillId="${fl}" borderId="${b}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyNumberFormat="1"${al ? ` applyAlignment="1"><alignment horizontal="${al === 'c' ? 'center' : 'left'}" vertical="center"${k.startsWith('enc') ? ' wrapText="1"' : ''}/></xf>` : '/>'}`; }).join('')}</cellXfs>
@@ -44,6 +44,7 @@ const ExcelLite = (() => {
 <sheetViews><sheetView workbookViewId="0" showGridLines="0">${sh.congelar ? `<pane ySplit="${sh.congelar}" topLeftCell="A${sh.congelar + 1}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/>` : ''}</sheetView></sheetViews>
 <sheetFormatPr defaultRowHeight="15"/><cols>${sh.anchos.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>
 <sheetData>${filas.map((r, ri) => `<row r="${ri + 1}"${ri === sh.congelar - 1 ? ' ht="30" customHeight="1"' : ri === 0 ? ' ht="32" customHeight="1"' : ''}>${r.map((c, i) => celda(c, ri, i)).join('')}</row>`).join('')}</sheetData>
+${sh.merge ? `<mergeCells count="1"><mergeCell ref="${sh.merge}"/></mergeCells>` : ''}
 ${sh.filtro ? `<autoFilter ref="${sh.filtro}"/>` : ''}
 ${sh.validations && sh.validations.length ? `<dataValidations count="${sh.validations.length}">${sh.validations.map(v => `<dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="${v.sqref}"><formula1>&quot;${v.lista}&quot;</formula1></dataValidation>`).join('')}</dataValidations>` : ''}
 <pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
@@ -91,20 +92,30 @@ function hojaDashboard() {
   const yr = hoy.getFullYear();
   const mo = hoy.getMonth() + 1;
 
+  // Llenar el fondo de gris y centrar el título como en la imagen
+  const fillRow = (rowArr) => {
+    let newRow = [];
+    for(let i=0; i<15; i++){
+      if(rowArr[i]) newRow.push(rowArr[i]);
+      else newRow.push(['', 'bg']);
+    }
+    return newRow;
+  };
+
   const filas = [
-    [['', ''], ['DASHBOARD DE INGRESOS', 'tit_big']],
-    [],
-    [['', ''], ['Año (edítalo):', 'lbl_b'], [yr, 'sel']],
-    [['', ''], ['Mes (edítalo):', 'lbl_b'], [mo, 'sel']],
-    [],
-    [
-      '', '',
+    fillRow([['', 'tit_dash'], ['DASHBOARD DE INGRESOS', 'tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash']]),
+    fillRow([]),
+    fillRow([['', 'bg'], ['Año (edítalo):', 'lbl_b'], [yr, 'sel']]),
+    fillRow([['', 'bg'], ['Mes (edítalo):', 'lbl_b'], [mo, 'sel']]),
+    fillRow([]),
+    fillRow([
+      ['', 'bg'], ['', 'bg'],
       ['Resumen Mensual', 'enc_blk'], ['Ingresos', 'enc_blk'], ['Por Cobrar', 'enc_blk'],
-      '',
+      ['', 'bg'],
       ['Día', 'enc_red'], ['Fecha', 'enc_red'], ['Ingresos', 'enc_red'], ['Por Cobrar', 'enc_red'],
-      '',
+      ['', 'bg'],
       ['Semana', 'enc_blk'], ['Ingresos', 'enc_blk'], ['Por Cobrar', 'enc_blk']
-    ]
+    ])
   ];
 
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -122,10 +133,10 @@ function hojaDashboard() {
       row.push([0, 'usd_b', `SUM(D7:D18)`]);
       row.push([0, 'usd_b', `SUM(E7:E18)`]);
     } else {
-      row.push('', '', '');
+      row.push(['', 'bg'], ['', 'bg'], ['', 'bg']);
     }
 
-    row.push(''); // F
+    row.push(['', 'bg']); // F
 
     // Diario
     row.push([i, 'txt']);
@@ -133,7 +144,7 @@ function hojaDashboard() {
     row.push([0, 'usd', `IF(H${i+6}="","",SUMIFS(Registros!G:G, Registros!A:A, H${i+6}))`]);
     row.push([0, 'usd', `IF(H${i+6}="","",SUMIFS(Registros!L:L, Registros!A:A, H${i+6}))`]);
 
-    row.push(''); // K
+    row.push(['', 'bg']); // K
 
     // Semanal
     if (i <= 5) {
@@ -169,18 +180,22 @@ function hojaDashboard() {
       row.push([0, 'usd_b', `SUM(M7:M11)`]);
       row.push([0, 'usd_b', `SUM(N7:N11)`]);
     } else {
-      row.push('', '', '');
+      row.push(['', 'bg'], ['', 'bg'], ['', 'bg']);
     }
 
-    filas.push(row);
+    row.push(['', 'bg']);
+    filas.push(fillRow(row));
   }
 
-  const listAnios = Array.from({length: 61}, (_,i) => 2020+i).join(',');
+  for(let i = 0; i < 5; i++) filas.push(fillRow([])); // Espacio extra abajo
+
+  const listAnios = Array.from({length: 46}, (_,i) => 2020+i).join(','); 
 
   return {
     nombre: 'Dashboard',
     filas,
-    anchos: [2, 14, 15, 15, 15, 4, 6, 12, 15, 15, 4, 18, 15, 15],
+    anchos: [5, 14, 15, 15, 15, 8, 6, 14, 15, 15, 8, 20, 15, 15, 10],
+    merge: 'A1:O1',
     validations: [
       { sqref: 'C3:C3', lista: listAnios },
       { sqref: 'C4:C4', lista: '1,2,3,4,5,6,7,8,9,10,11,12' }
@@ -254,7 +269,14 @@ function hojaRegistros(nombre, bloque, rs, conPago){
   });
 
   const cab = ['Fecha', ...(conPago ? [] : ['Cliente']), 'Figura / Producto', 'Operación', 'Precio Total', 'Método de Pago', 'Monto Pagado', 'Deuda Anterior', 'Restante por Cobrar', 'Estado', 'Notas y Observación', 'Saldo del Pedido'];
-  const filas = [...bloque, [], cab.map(t => [t, 'enc_blk'])];
+  
+  // Convertimos el bloque superior a cabecera roja ancha
+  const bloqueEstilizado = [
+    [['Registro Torii — Registros', 'tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash'], ['','tit_dash']],
+    bloque[1] // La fila de "Del 30-10 al..." se mantiene
+  ];
+  
+  const filas = [...bloqueEstilizado, [], cab.map(t => [t, 'enc_blk'])];
   const hr = filas.length; // índice de la cabecera (1-based)
   
   operaciones.forEach(o => {
@@ -270,7 +292,8 @@ function hojaRegistros(nombre, bloque, rs, conPago){
       [o.restante, 'usd'],
       [o.estado, o.estado === 'Pagado' ? 'ok' : 'ap'],
       [o.nota, 'txt'],
-      [o.deudaFinal, 'usd']
+      [o.deudaFinal, 'usd'],
+      ['', 'bg']
     ]);
   });
 
@@ -281,7 +304,8 @@ function hojaRegistros(nombre, bloque, rs, conPago){
     ['TOTAL', 'tl'],
     ...Array(conPago ? 4 : 5).fill(['', 'tl']),
     [0, 'usd_b', `SUBTOTAL(109,${colMonto}${hr + 1}:${colMonto}${hr + n})`],
-    ...Array(5).fill(['', 'tl'])
+    ...Array(5).fill(['', 'tl']),
+    ['', 'bg']
   ]);
 
   // Validaciones (Listas desplegables)
@@ -301,9 +325,10 @@ function hojaRegistros(nombre, bloque, rs, conPago){
   return {
     nombre: nombre,
     filas,
-    anchos: [15, ...(conPago ? [] : [22]), 25, 14, 13, 16, 15, 15, 17, 12, 25, 16],
+    anchos: [15, ...(conPago ? [] : [22]), 25, 14, 13, 16, 15, 15, 17, 12, 25, 16, 10],
     congelar: hr,
     filtro: `A${hr}:${ExcelLite.col(cab.length - 1)}${hr + n}`,
+    merge: 'A1:L1',
     validations
   };
 }
